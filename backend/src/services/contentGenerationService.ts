@@ -57,8 +57,22 @@ export class ContentGenerationService {
   }
 
   private static buildUserPrompt(contentType: string, params: Record<string, any>): string {
-    const basePrompt = `Please create ${contentType} content with the following parameters:\n`;
-    return basePrompt + JSON.stringify(params, null, 2);
+    const formattedParams = {
+      ...params,
+      contentType,
+      timestamp: new Date().toISOString(),
+    };
+
+    let prompt = `Generate professional marketing content for the specified content type.
+Content Type: ${contentType}
+Requirements:
+`;
+
+    Object.entries(params).forEach(([key, value]) => {
+      prompt += `- ${key}: ${value}\n`;
+    });
+
+    return prompt;
   }
 
   private static parseResponse(contentType: string, response: string): Record<string, any> {
@@ -69,14 +83,13 @@ export class ContentGenerationService {
       } catch (e) {
         // If not valid JSON, use content type specific parsers
         switch (contentType) {
-          case 'facebook':
+          case 'metaAdCopy':
             return this.parseFacebookResponse(response);
-          case 'google':
+          case 'googleAdCopy':
             return this.parseGoogleResponse(response);
           case 'videoScript':
             return this.parseVideoScriptResponse(response);
           default:
-            // Generic parsing - return as-is with a text field
             return { text: response };
         }
       }

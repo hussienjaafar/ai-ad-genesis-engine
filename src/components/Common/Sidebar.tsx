@@ -1,4 +1,3 @@
-
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -8,6 +7,7 @@ import {
   Share2,
   LogOut,
   ChevronRight,
+  Wand2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -45,7 +45,7 @@ const Sidebar = ({ isOnboarded }: SidebarProps) => {
       >
         <NavItem to="/dashboard" icon={LayoutDashboard} label="Dashboard" />
         <NavItem to="/ad-generator" icon={MessageSquarePlus} label="Ad Generator" />
-        <NavItem to="/generate-content/123" icon={ChevronRight} label="Generate Content" />
+        <NavItem to="/business/123/generate" icon={Wand2} label="Generate Content" />
         <NavItem to="/platforms" icon={Share2} label="Platforms" />
         {!isMobile && (
           <>

@@ -11,7 +11,7 @@ import { connectToDatabase } from './lib/mongoose';
 import apiRoutes from './routes';
 import setupSwagger from './lib/swagger';
 
-const app = express();
+export const app = express();
 const port = process.env.PORT || 4000;
 
 // Middleware
@@ -48,22 +48,23 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-// Start server
-const startServer = async () => {
-  try {
-    // Connect to MongoDB
-    await connectToDatabase();
-    console.log('Connected to MongoDB');
+// Start server only if not being imported for testing
+if (require.main === module) {
+  const startServer = async () => {
+    try {
+      await connectToDatabase();
+      console.log('Connected to MongoDB');
+      
+      app.listen(port, () => {
+        console.log(`Server running on port ${port}`);
+        console.log(`API Documentation available at http://localhost:${port}/docs`);
+      });
+    } catch (error) {
+      console.error('Failed to start server:', error);
+      process.exit(1);
+    }
+  };
 
-    // Start Express server
-    app.listen(port, () => {
-      console.log(`Server running on port ${port}`);
-      console.log(`API Documentation available at http://localhost:${port}/docs`);
-    });
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
-  }
-};
+  startServer();
+}
 
-startServer();

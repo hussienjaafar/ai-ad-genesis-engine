@@ -22,7 +22,7 @@ const App = () => (
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/ad-generator" element={<AdGenerator />} />
         <Route path="/platforms" element={<PlatformIntegration />} />
-        <Route path="/generate-content/:id" element={<GenerateContent />} />
+        <Route path="/business/:id/generate" element={<GenerateContent />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>

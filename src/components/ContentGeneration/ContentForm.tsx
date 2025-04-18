@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -21,6 +20,12 @@ const contentFormSchema = z.object({
 });
 
 type ContentFormValues = z.infer<typeof contentFormSchema>;
+
+const contentTypeMap: Record<string, string> = {
+  facebook: 'metaAdCopy',
+  google: 'googleAdCopy',
+  videoScript: 'videoScript'
+};
 
 interface ContentFormProps {
   businessId: string;
@@ -53,7 +58,10 @@ export function ContentForm({ businessId, offerings, onContentGenerated }: Conte
     };
     
     generateContent(
-      { contentType: values.contentType, params },
+      { 
+        contentType: contentTypeMap[values.contentType],
+        params 
+      },
       {
         onSuccess: (data) => {
           onContentGenerated(data);

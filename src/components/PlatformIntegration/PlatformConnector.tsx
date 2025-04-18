@@ -57,7 +57,7 @@ const PlatformConnector = ({
   const handleConnect = (platform: AdPlatform) => {
     if (platform.name === "facebook" || platform.name === "google") {
       // Use OAuth flow for Facebook and Google
-      initiateOAuth(platform.name, businessId);
+      initiateOAuth(platform.name);
       setCurrentPlatform(platform);
     } else {
       // Use dialog for other platforms

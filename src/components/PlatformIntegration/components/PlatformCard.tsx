@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircleIcon, ExternalLinkIcon } from "lucide-react";
@@ -9,9 +10,10 @@ interface PlatformCardProps {
   platform: AdPlatform;
   minimal?: boolean;
   onConnect: (platform: AdPlatform) => void;
+  isLoading?: boolean;
 }
 
-export const PlatformCard = ({ platform, minimal = false, onConnect }: PlatformCardProps) => {
+export const PlatformCard = ({ platform, minimal = false, onConnect, isLoading = false }: PlatformCardProps) => {
   if (minimal) {
     return (
       <Card className={`${platform.isConnected ? 'border-success-500' : ''}`}>
@@ -32,8 +34,9 @@ export const PlatformCard = ({ platform, minimal = false, onConnect }: PlatformC
               onClick={() => onConnect(platform)}
               className="w-full"
               variant="outline"
+              disabled={isLoading}
             >
-              Connect
+              {isLoading ? "Connecting..." : "Connect"}
             </Button>
           ) : (
             <Button 
@@ -78,8 +81,9 @@ export const PlatformCard = ({ platform, minimal = false, onConnect }: PlatformC
           <Button 
             onClick={() => onConnect(platform)}
             className="w-full"
+            disabled={isLoading}
           >
-            Connect <ExternalLinkIcon className="ml-2 h-4 w-4" />
+            {isLoading ? "Connecting..." : "Connect"} <ExternalLinkIcon className="ml-2 h-4 w-4" />
           </Button>
         ) : (
           <div className="flex gap-2 w-full">

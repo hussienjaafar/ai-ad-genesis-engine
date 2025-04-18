@@ -1,4 +1,5 @@
 
+import { useState, useEffect } from "react";
 import MainLayout from "../components/Layout/MainLayout";
 import PageHeader from "../components/Common/PageHeader";
 import PlatformConnector from "../components/PlatformIntegration/PlatformConnector";
@@ -6,8 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdPlatform } from "@/interfaces/types";
 import { toast } from "sonner";
+import { useParams } from "react-router-dom";
 
 const PlatformIntegration = () => {
+  // In a real app, this would come from the route params or auth context
+  const [businessId, setBusinessId] = useState("123");
+
   const handlePlatformConnected = (platform: AdPlatform) => {
     toast.success(`${platform.name} connected successfully!`);
   };
@@ -35,7 +40,10 @@ const PlatformIntegration = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <PlatformConnector onConnected={handlePlatformConnected} />
+              <PlatformConnector 
+                onConnected={handlePlatformConnected} 
+                businessId={businessId}
+              />
             </CardContent>
           </Card>
         </TabsContent>

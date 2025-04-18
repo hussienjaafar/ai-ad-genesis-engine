@@ -10,6 +10,7 @@ import cookieParser from 'cookie-parser';
 import { connectToDatabase } from './lib/mongoose';
 import apiRoutes from './routes';
 import setupSwagger from './lib/swagger';
+import { startTokenRefreshJob } from './jobs/tokenRefreshJob';
 
 export const app = express();
 const port = process.env.PORT || 4000;
@@ -55,6 +56,9 @@ if (process.env.NODE_ENV !== 'test') {
       await connectToDatabase();
       console.log('Connected to MongoDB');
       
+      // Start token refresh cron job
+      startTokenRefreshJob();
+      
       app.listen(port, () => {
         console.log(`Server running on port ${port}`);
         console.log(`API Documentation available at http://localhost:${port}/docs`);
@@ -67,4 +71,3 @@ if (process.env.NODE_ENV !== 'test') {
 
   startServer();
 }
-

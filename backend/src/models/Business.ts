@@ -18,7 +18,30 @@ export interface IBusiness extends Document {
     style: string;
     examples?: string[];
   };
-  integrations?: Record<string, any>;
+  integrations?: {
+    adPlatforms?: {
+      facebook?: {
+        accountId: string;
+        accountName: string;
+        token: string;  // encrypted token
+        expiresAt: string;
+        isConnected: boolean;
+        lastSynced: string;
+        needsReauth: boolean;
+      };
+      google?: {
+        accountId: string;
+        accountName: string;
+        token: string;  // encrypted refresh token
+        expiresAt: string;
+        isConnected: boolean;
+        lastSynced: string;
+        needsReauth: boolean;
+      };
+      linkedin?: Record<string, any>;
+      tiktok?: Record<string, any>;
+    };
+  };
   settings?: Record<string, any>;
   targetAudience?: {
     demographics?: Record<string, any>;
@@ -53,6 +76,20 @@ export interface IBusiness extends Document {
  *           type: string
  *         onboardingStep:
  *           type: number
+ *         integrations:
+ *           type: object
+ *           properties:
+ *             adPlatforms:
+ *               type: object
+ *               properties:
+ *                 facebook:
+ *                   type: object
+ *                 google:
+ *                   type: object
+ *                 linkedin:
+ *                   type: object
+ *                 tiktok:
+ *                   type: object
  */
 const businessSchema = new Schema<IBusiness>(
   {

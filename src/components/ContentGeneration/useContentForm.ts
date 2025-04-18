@@ -35,7 +35,7 @@ export function useContentForm(businessId: string, onContentGenerated: (content:
     
     generateContent(
       { 
-        contentType: mappedContentType,
+        contentType: mappedContentType as "facebook" | "google" | "videoScript",
         params 
       },
       {

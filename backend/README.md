@@ -213,5 +213,22 @@ Visit http://localhost:4000/docs to access the API documentation.
   - GET `/api/oauth/google/callback` - Handle Google OAuth callback
 
 - **Analytics**:
-  - GET `/api/businesses/:id/analytics/performance` - Get performance metrics
+  - GET `/api/businesses/:id/analytics/performance?days=30` - Get performance metrics for specified days
   - GET `/api/businesses/:id/analytics/insights` - Get performance insights
+
+## How KPIs are calculated
+
+The analytics dashboard displays several key performance indicators (KPIs):
+
+- **Spend**: Total amount spent on advertising during the selected period
+- **ROAS (Return on Ad Spend)**: Total revenue divided by total ad spend
+- **CPL (Cost Per Lead)**: Total spend divided by number of leads generated
+- **CTR (Click-Through Rate)**: Number of clicks divided by number of impressions
+
+The system calculates these metrics by aggregating data from all connected advertising platforms,
+normalizing the data into a standard format, and applying the appropriate formulas.
+
+Performance data is collected through the ETL process that runs daily (at 3 AM by default),
+fetching the previous day's data from all platforms.
+
+![Analytics Dashboard Demo](docs/images/analytics-dashboard-demo.gif)

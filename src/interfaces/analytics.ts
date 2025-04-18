@@ -1,24 +1,24 @@
 
 export interface PerformanceMetrics {
-  totals: {
-    impressions: number;
-    clicks: number;
-    ctr: number;
+  dateRange: string;
+  kpis: {
     spend: number;
+    roas: number;
+    cpl: number;
+    ctr: number;
   };
-  data: DailyMetric[];
+  daily: DailyMetric[];
 }
 
 export interface DailyMetric {
-  _id: {
-    date: string;
-  };
-  metrics: {
-    impressions: number;
-    clicks: number;
-    ctr: number;
-    spend: number;
-  };
+  date: string;
+  spend: number;
+  impressions: number;
+  clicks: number;
+  leads: number;
+  ctr: number;
+  cpl: number;
+  roas: number;
 }
 
 export interface InsightData {

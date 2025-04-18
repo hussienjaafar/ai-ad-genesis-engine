@@ -1,104 +1,116 @@
-import { NavLink } from "react-router-dom";
-import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   Settings,
-  MessageSquarePlus,
-  Share2,
-  LogOut,
-  ChevronRight,
-  Wand2,
+  Users,
+  HelpCircle,
+  BarChart3,
 } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/hooks/useAuth";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/contexts/AuthContext";
 
-interface SidebarProps {
-  isOnboarded: boolean;
-}
+export default function Sidebar() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-const Sidebar = ({ isOnboarded }: SidebarProps) => {
-  const { logout } = useAuth();
-  const isMobile = useIsMobile();
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location.pathname]);
 
-  if (!isOnboarded) return null;
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
+  };
+
+  const menuItems = [
+    {
+      name: "Dashboard",
+      icon: <LayoutDashboard size={22} />,
+      path: "/",
+      active: location.pathname === "/",
+    },
+    {
+      name: "Users",
+      icon: <Users size={22} />,
+      path: "/users",
+      active: location.pathname === "/users",
+    },
+    {
+      name: "Analytics",
+      icon: <BarChart3 size={22} />,
+      path: "/analytics",
+      active: location.pathname === "/analytics",
+    },
+    {
+      name: "Settings",
+      icon: <Settings size={22} />,
+      path: "/settings",
+      active: location.pathname === "/settings",
+    },
+    {
+      name: "Help",
+      icon: <HelpCircle size={22} />,
+      path: "/help",
+      active: location.pathname === "/help",
+    },
+  ];
 
   return (
-    <aside
-      className={cn(
-        "flex flex-col bg-slate-50 border-r h-full",
-        isMobile ? "fixed bottom-0 w-full h-16 z-50 border-t" : "w-64"
-      )}
-    >
-      {!isMobile && (
-        <div className="p-6">
-          <h2 className="text-xl font-bold">AI Ad Genesis</h2>
-        </div>
-      )}
+    <div className="flex flex-col h-full bg-gray-50 border-r py-4 w-64">
+      <div className="px-6 mb-8">
+        <Button variant="ghost" className="justify-start w-full hover:bg-gray-100">
+          <span className="font-bold text-lg">AdGenesis AI</span>
+        </Button>
+      </div>
 
-      <nav
-        className={cn(
-          "flex-1",
-          isMobile ? "flex flex-row items-center justify-around" : "flex-col space-y-1 p-2"
-        )}
-      >
-        <NavItem to="/dashboard" icon={LayoutDashboard} label="Dashboard" />
-        <NavItem to="/ad-generator" icon={MessageSquarePlus} label="Ad Generator" />
-        <NavItem to="/business/123/generate" icon={Wand2} label="Generate Content" />
-        <NavItem to="/platforms" icon={Share2} label="Platforms" />
-        {!isMobile && (
-          <>
-            <Separator className="my-4" />
-            <NavItem to="/settings" icon={Settings} label="Settings" />
-          </>
-        )}
+      <nav className="flex-1">
+        <ul>
+          {menuItems.map((item) => (
+            <li key={item.name}>
+              <Button
+                variant="ghost"
+                className={`justify-start w-full px-6 hover:bg-gray-100 ${item.active ? 'text-primary font-semibold' : 'text-gray-700'
+                  }`}
+                onClick={() => {
+                  navigate(item.path);
+                  setIsMenuOpen(false);
+                }}
+              >
+                {item.icon}
+                <span className="ml-3">{item.name}</span>
+              </Button>
+            </li>
+          ))}
+        </ul>
       </nav>
 
-      {!isMobile && (
-        <div className="p-4 mt-auto">
-          <Button
-            variant="ghost"
-            className="w-full justify-start"
-            onClick={() => logout()}
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Logout
-          </Button>
-        </div>
-      )}
-    </aside>
+      <div className="border-t py-4 mt-4">
+        <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="justify-start w-full px-6 font-normal hover:bg-gray-100">
+              <Avatar className="mr-3 h-8 w-8">
+                <AvatarImage src="https://github.com/shadcn.png" alt="Avatar" />
+                <AvatarFallback>CN</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col text-left">
+                <span className="text-sm font-medium leading-none">{user?.name}</span>
+                <span className="text-xs text-gray-500">{user?.email}</span>
+              </div>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56" align="end" forceMount>
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
   );
-};
-
-interface NavItemProps {
-  to: string;
-  icon: React.ElementType;
-  label: string;
 }
-
-const NavItem = ({ to, icon: Icon, label }: NavItemProps) => {
-  const isMobile = useIsMobile();
-
-  return (
-    <NavLink
-      to={to}
-      className={({ isActive }) =>
-        cn(
-          "flex items-center py-2 px-4 rounded-md text-sm transition-colors",
-          isMobile
-            ? "flex-col text-xs justify-center"
-            : "hover:bg-slate-100",
-          isActive
-            ? "bg-slate-100 text-slate-900"
-            : "text-slate-600 hover:text-slate-900"
-        )
-      }
-    >
-      <Icon className={cn("h-5 w-5", isMobile ? "h-6 w-6" : "mr-2")} />
-      <span>{label}</span>
-    </NavLink>
-  );
-};
-
-export default Sidebar;

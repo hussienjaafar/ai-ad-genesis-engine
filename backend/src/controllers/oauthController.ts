@@ -3,9 +3,15 @@ import { Request, Response } from 'express';
 import axios from 'axios';
 import crypto from 'crypto';
 import { encrypt } from '../lib/crypto';
+import { generateSecureRandomString } from '../lib/crypto';
 import BusinessService from '../services/businessService';
 import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
+import { setWithExpiry, get, del } from '../lib/redis';
+import pLimit from 'p-limit';
+
+// Rate limiter for API calls
+const limiter = pLimit(5); // Max 5 concurrent requests
 
 export class OAuthController {
   /**
@@ -14,29 +20,37 @@ export class OAuthController {
   static async metaInit(req: Request, res: Response) {
     try {
       // Generate state for CSRF protection
-      const state = crypto.randomBytes(16).toString('hex');
+      const state = generateSecureRandomString();
+      const sessionId = req.sessionID || generateSecureRandomString();
       
-      // Store state in session or cookie
-      res.cookie('oauth_state', state, { 
-        httpOnly: true, 
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 10 * 60 * 1000 // 10 minutes
-      });
-
+      // Store state in Redis with session ID as key (10 minute expiry)
+      const redisKey = `oauth:meta:state:${sessionId}`;
+      await setWithExpiry(redisKey, state, 10 * 60); // 10 minutes
+      
       // Business ID for which we're connecting
       const businessId = req.query.businessId as string;
       if (!businessId) {
         return res.status(400).json({ error: 'Business ID is required' });
       }
       
+      // Store business ID in session cookie
       res.cookie('oauth_business_id', businessId, { 
         httpOnly: true, 
         secure: process.env.NODE_ENV === 'production',
         maxAge: 10 * 60 * 1000 // 10 minutes
       });
       
-      // Build authorization URL
-      const redirectUri = `${req.protocol}://${req.get('host')}/api/oauth/meta/callback`;
+      // Set state in cookie for clients without session support
+      res.cookie('oauth_state', state, { 
+        httpOnly: true, 
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 10 * 60 * 1000 // 10 minutes
+      });
+      
+      // Build authorization URL - use API_BASE_URL if set
+      const baseUrl = process.env.API_BASE_URL || `${req.protocol}://${req.get('host')}`;
+      const redirectUri = `${baseUrl}/api/oauth/meta/callback`;
+      
       const authUrl = new URL('https://www.facebook.com/v17.0/dialog/oauth');
       authUrl.searchParams.append('client_id', process.env.FB_APP_ID || '');
       authUrl.searchParams.append('redirect_uri', redirectUri);
@@ -59,11 +73,21 @@ export class OAuthController {
     try {
       // Verify state for CSRF protection
       const { state, code } = req.query;
-      const storedState = req.cookies.oauth_state;
+      const sessionId = req.sessionID || '';
+      const storedState = await get(`oauth:meta:state:${sessionId}`);
+      const fallbackState = req.cookies.oauth_state;
       const businessId = req.cookies.oauth_business_id;
       
-      if (!state || !storedState || state !== storedState) {
+      // Try Redis state first, fall back to cookie
+      const validState = storedState || fallbackState;
+      
+      if (!state || !validState || state !== validState) {
         return res.status(400).json({ error: 'Invalid state parameter' });
+      }
+      
+      // Clean up state
+      if (storedState) {
+        await del(`oauth:meta:state:${sessionId}`);
       }
       
       // Clear cookies
@@ -75,40 +99,42 @@ export class OAuthController {
       }
       
       // Exchange code for access token
-      const redirectUri = `${req.protocol}://${req.get('host')}/api/oauth/meta/callback`;
-      const tokenResponse = await axios.get('https://graph.facebook.com/v17.0/oauth/access_token', {
+      const baseUrl = process.env.API_BASE_URL || `${req.protocol}://${req.get('host')}`;
+      const redirectUri = `${baseUrl}/api/oauth/meta/callback`;
+      
+      const tokenResponse = await limiter(() => axios.get('https://graph.facebook.com/v17.0/oauth/access_token', {
         params: {
           client_id: process.env.FB_APP_ID,
           client_secret: process.env.FB_APP_SECRET,
           redirect_uri: redirectUri,
           code
         }
-      });
+      }));
       
-      const { access_token, expires_in } = tokenResponse.data;
+      const { access_token } = tokenResponse.data;
       
       // Get long-lived token
-      const longLivedTokenResponse = await axios.get('https://graph.facebook.com/v17.0/oauth/access_token', {
+      const longLivedTokenResponse = await limiter(() => axios.get('https://graph.facebook.com/v17.0/oauth/access_token', {
         params: {
           grant_type: 'fb_exchange_token',
           client_id: process.env.FB_APP_ID,
           client_secret: process.env.FB_APP_SECRET,
           fb_exchange_token: access_token
         }
-      });
+      }));
       
       const { access_token: longLivedToken, expires_in: longLivedExpiry } = longLivedTokenResponse.data;
       
-      // Get user's ad accounts
-      const adAccountsResponse = await axios.get('https://graph.facebook.com/v17.0/me/adaccounts', {
-        params: {
-          access_token: longLivedToken,
-          fields: 'id,name,account_id'
-        }
-      });
+      // Get user's ad accounts with pagination support
+      let adAccountsResponse;
+      let adAccount;
+      let nextPageUrl = `https://graph.facebook.com/v17.0/me/adaccounts?access_token=${longLivedToken}&fields=id,name,account_id`;
+      
+      // Use the first page only for now
+      adAccountsResponse = await limiter(() => axios.get(nextPageUrl));
       
       // Take the first ad account for now (could be expanded to let user choose)
-      const adAccount = adAccountsResponse.data.data[0];
+      adAccount = adAccountsResponse.data.data[0];
       
       // Calculate expiry date
       const expiresAt = new Date();
@@ -142,21 +168,35 @@ export class OAuthController {
   static async googleInit(req: Request, res: Response) {
     try {
       // Create OAuth client
+      const baseUrl = process.env.API_BASE_URL || `${req.protocol}://${req.get('host')}`;
+      const redirectUri = `${baseUrl}/api/oauth/google/callback`;
+      
       const oauth2Client = new OAuth2Client(
         process.env.GOOGLE_CLIENT_ID,
         process.env.GOOGLE_CLIENT_SECRET,
-        `${req.protocol}://${req.get('host')}/api/oauth/google/callback`
+        redirectUri
       );
       
       // Generate state for CSRF protection
-      const state = crypto.randomBytes(16).toString('hex');
+      const state = generateSecureRandomString();
+      const sessionId = req.sessionID || generateSecureRandomString();
       
-      // Store state in cookie
-      res.cookie('oauth_state', state, { 
-        httpOnly: true, 
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 10 * 60 * 1000 // 10 minutes
-      });
+      // Store state in Redis with session ID as key
+      const redisKey = `oauth:google:state:${sessionId}`;
+      await setWithExpiry(redisKey, state, 10 * 60); // 10 minutes
+      
+      // Generate code verifier and challenge
+      const codeVerifier = generateSecureRandomString();
+      const codeChallenge = crypto
+        .createHash('sha256')
+        .update(codeVerifier)
+        .digest('base64')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=/g, '');
+      
+      // Store code verifier in Redis
+      await setWithExpiry(`oauth:google:verifier:${sessionId}`, codeVerifier, 10 * 60);
       
       // Business ID for which we're connecting
       const businessId = req.query.businessId as string;
@@ -164,12 +204,30 @@ export class OAuthController {
         return res.status(400).json({ error: 'Business ID is required' });
       }
       
+      // Store state in cookie as fallback
+      res.cookie('oauth_state', state, { 
+        httpOnly: true, 
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 10 * 60 * 1000 // 10 minutes
+      });
+      
+      // Store code verifier in cookie as fallback
+      res.cookie('oauth_code_verifier', codeVerifier, { 
+        httpOnly: true, 
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 10 * 60 * 1000 // 10 minutes
+      });
+      
       res.cookie('oauth_business_id', businessId, { 
         httpOnly: true, 
         secure: process.env.NODE_ENV === 'production',
         maxAge: 10 * 60 * 1000 // 10 minutes
       });
       
+      // Check if business already has a Google connection
+      const business = await BusinessService.getBusinessById(businessId);
+      const hasGoogleConnection = business?.integrations?.adPlatforms?.google?.isConnected;
+
       // Generate auth URL
       const authUrl = oauth2Client.generateAuthUrl({
         access_type: 'offline',
@@ -178,7 +236,9 @@ export class OAuthController {
           'https://www.googleapis.com/auth/userinfo.email'
         ],
         state,
-        prompt: 'consent' // Force to get refresh token
+        prompt: hasGoogleConnection ? 'select_account' : 'consent', // Force to get refresh token if new connection
+        code_challenge_method: 'S256',
+        code_challenge: codeChallenge
       });
       
       // Redirect to Google authorization page
@@ -196,15 +256,35 @@ export class OAuthController {
     try {
       // Verify state for CSRF protection
       const { state, code } = req.query;
-      const storedState = req.cookies.oauth_state;
+      const sessionId = req.sessionID || '';
+      const storedState = await get(`oauth:google:state:${sessionId}`);
+      const fallbackState = req.cookies.oauth_state;
+      
+      // Try Redis state first, fall back to cookie
+      const validState = storedState || fallbackState;
+      
+      if (!state || !validState || state !== validState) {
+        return res.status(400).json({ error: 'Invalid state parameter' });
+      }
+      
+      // Get code verifier
+      const storedVerifier = await get(`oauth:google:verifier:${sessionId}`);
+      const fallbackVerifier = req.cookies.oauth_code_verifier;
+      const codeVerifier = storedVerifier || fallbackVerifier;
+      
       const businessId = req.cookies.oauth_business_id;
       
-      if (!state || !storedState || state !== storedState) {
-        return res.status(400).json({ error: 'Invalid state parameter' });
+      // Clean up state and verifier
+      if (storedState) {
+        await del(`oauth:google:state:${sessionId}`);
+      }
+      if (storedVerifier) {
+        await del(`oauth:google:verifier:${sessionId}`);
       }
       
       // Clear cookies
       res.clearCookie('oauth_state');
+      res.clearCookie('oauth_code_verifier');
       res.clearCookie('oauth_business_id');
       
       if (!code) {
@@ -212,13 +292,20 @@ export class OAuthController {
       }
       
       // Exchange code for tokens
+      const baseUrl = process.env.API_BASE_URL || `${req.protocol}://${req.get('host')}`;
+      const redirectUri = `${baseUrl}/api/oauth/google/callback`;
+      
       const oauth2Client = new OAuth2Client(
         process.env.GOOGLE_CLIENT_ID,
         process.env.GOOGLE_CLIENT_SECRET,
-        `${req.protocol}://${req.get('host')}/api/oauth/google/callback`
+        redirectUri
       );
       
-      const { tokens } = await oauth2Client.getToken(code as string);
+      const { tokens } = await oauth2Client.getToken({
+        code: code as string,
+        codeVerifier
+      });
+      
       const { access_token, refresh_token, expiry_date } = tokens;
       
       // Get user info to identify account

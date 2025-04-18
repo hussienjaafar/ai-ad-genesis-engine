@@ -9,6 +9,7 @@ This is the backend API for the AI Ad Genesis Engine application.
 
 - Node.js 18 or higher
 - MongoDB (or Docker for containerized development)
+- Redis (for OAuth state management)
 
 ### Local Development
 
@@ -54,28 +55,59 @@ The application supports connecting to ad platforms using OAuth:
 1. **Setup Environment Variables**:
    - `FB_APP_ID` and `FB_APP_SECRET` - Create an app at https://developers.facebook.com
    - `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` - Create credentials at https://console.developers.google.com
-   - `OAUTH_ENCRYPTION_KEY` - Generate a 32+ character random string for encrypting tokens
+   - `OAUTH_ENCRYPTION_KEY` - Generate a 32-character random string for encrypting tokens (EXACTLY 32 BYTES)
+   - `API_BASE_URL` - Base URL for API endpoints (for OAuth callbacks)
 
 2. **Connecting Facebook/Meta Ads**:
    - Navigate to the Platform Integration page
    - Click "Connect" on the Facebook/Meta card
    - Authenticate with Facebook and grant permissions
    - Select the ad account to connect
+   - Meta tokens expire after 60 days; the system will alert you 7 days prior to expiration
 
 3. **Connecting Google Ads**:
    - Navigate to the Platform Integration page
    - Click "Connect" on the Google card
    - Authenticate with Google and grant permissions
+   - The system uses PKCE flow for enhanced security
 
 4. **Token Refresh**:
    - Facebook tokens expire after 60 days
-   - A nightly job checks for tokens expiring within 15 days
-   - When a token nears expiration, the system marks it for reauth
+   - A nightly job checks for tokens expiring within 7 days
+   - When a token nears expiration, the system marks it for reauth and shows a "Reconnect" button
 
 5. **Security**:
    - All OAuth tokens are encrypted with AES-256-GCM before storage
-   - CSRF protection is implemented for all OAuth flows
+   - CSRF protection with state parameter validation using Redis
+   - PKCE protection for Google OAuth flow
    - Sensitive operations require authentication and proper authorization
+
+### Running ETL locally
+
+The ETL (Extract, Transform, Load) process can be run locally for testing:
+
+1. Ensure your .env file has the necessary platform credentials
+2. Run the ETL job manually with:
+
+```bash
+npm run etl
+```
+
+For development, you can also modify the cron schedule in .env:
+
+```
+CRON_ETL_SCHEDULE=*/30 * * * * # Run every 30 minutes
+```
+
+The ETL process:
+
+1. Runs according to the schedule defined in CRON_ETL_SCHEDULE (default: 3 AM daily)
+2. Connects to each platform for all businesses with valid credentials
+3. Fetches the previous day's performance data with pagination support
+4. Processes and normalizes the data into a standard format
+5. Upserts the data into the performanceData collection
+6. Handles rate limiting with exponential backoff and jitter
+7. Emits Prometheus metrics for monitoring
 
 ### Using Docker Compose
 
@@ -98,23 +130,6 @@ Visit http://localhost:4000/docs to access the API documentation.
 - `npm run seed` - Seed the database with initial data
 - `npm run migrate-indexes` - Create database indexes (run once after setup)
 - `npm run etl` - Run the ETL job manually
-
-## Running ETL locally
-
-The ETL (Extract, Transform, Load) process can be run locally for testing:
-
-1. Ensure your .env file has the necessary platform credentials
-2. Run the ETL job manually with:
-
-```bash
-npm run etl
-```
-
-For development, you can also modify the cron schedule in .env:
-
-```
-CRON_ETL_SCHEDULE=*/30 * * * * # Run every 30 minutes
-```
 
 ## API Endpoints
 

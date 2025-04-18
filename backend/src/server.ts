@@ -12,6 +12,12 @@ import apiRoutes from './routes';
 import setupSwagger from './lib/swagger';
 import { startTokenRefreshJob } from './jobs/tokenRefreshJob';
 
+// Validate encryption key
+if (process.env.NODE_ENV === 'production' && (!process.env.OAUTH_ENCRYPTION_KEY || process.env.OAUTH_ENCRYPTION_KEY.length !== 32)) {
+  console.error('ERROR: OAUTH_ENCRYPTION_KEY must be exactly 32 characters in length.');
+  process.exit(1);
+}
+
 export const app = express();
 const port = process.env.PORT || 4000;
 

@@ -19,6 +19,8 @@ const PlatformConnector = ({ onConnected, minimal = false, businessId = "123" }:
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentPlatform, setCurrentPlatform] = useState<AdPlatform | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [oauthPopup, setOauthPopup] = useState<Window | null>(null);
+  const [pollTimer, setPollTimer] = useState<NodeJS.Timeout | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -49,6 +51,29 @@ const PlatformConnector = ({ onConnected, minimal = false, businessId = "123" }:
       }
     }
   }, [location, platforms, onConnected, navigate]);
+  
+  // Listen for messages from popup window
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      // Only accept messages from our own origin
+      if (event.origin !== window.location.origin) return;
+      
+      if (event.data === 'oauth-success') {
+        // Cleanup polling timer
+        if (pollTimer) clearInterval(pollTimer);
+        setPollTimer(null);
+        
+        // Success message already handled by URL parameter check
+        if (oauthPopup && !oauthPopup.closed) {
+          oauthPopup.close();
+        }
+        setOauthPopup(null);
+      }
+    };
+    
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [oauthPopup, pollTimer]);
 
   const handleConnect = (platform: AdPlatform) => {
     if (platform.name === "facebook" || platform.name === "google") {
@@ -63,10 +88,44 @@ const PlatformConnector = ({ onConnected, minimal = false, businessId = "123" }:
   
   const initiateOAuth = async (platformName: string) => {
     setIsLoading(true);
+    setCurrentPlatform(platforms.find(p => p.name === platformName) || null);
+    
     try {
-      // Redirect to OAuth initialization endpoint
+      // Open OAuth in popup
       const oauthPath = platformName === "facebook" ? "meta" : platformName;
-      window.location.href = `/api/oauth/${oauthPath}/init?businessId=${businessId}`;
+      const popupUrl = `/api/oauth/${oauthPath}/init?businessId=${businessId}`;
+      
+      // Open popup centered
+      const width = 600;
+      const height = 700;
+      const left = window.screenX + (window.outerWidth - width) / 2;
+      const top = window.screenY + (window.outerHeight - height) / 2;
+      
+      const popup = window.open(
+        popupUrl, 
+        'oauth-popup',
+        `width=${width},height=${height},left=${left},top=${top}`
+      );
+      
+      setOauthPopup(popup);
+      
+      // Start polling to check if popup closed
+      const timer = setInterval(() => {
+        if (popup && popup.closed) {
+          clearInterval(timer);
+          setPollTimer(null);
+          setIsLoading(false);
+          
+          // If popup closed without success message, show error
+          const platform = platforms.find(p => p.name === platformName);
+          if (platform && !platform.isConnected) {
+            toast.error(`Authorization cancelled for ${platformName}`);
+          }
+        }
+      }, 1000);
+      
+      setPollTimer(timer);
+      
     } catch (error) {
       toast.error(`Failed to connect to ${platformName}`);
       console.error("OAuth initialization error:", error);
@@ -91,6 +150,33 @@ const PlatformConnector = ({ onConnected, minimal = false, businessId = "123" }:
       setIsDialogOpen(false);
     }
   };
+
+  // Fetch platform status from API (in real app)
+  useEffect(() => {
+    // This would be an API call in a real app
+    const fetchPlatformStatus = async () => {
+      try {
+        // Mock data for demonstration
+        const platformsWithStatus = platforms.map(platform => {
+          if (platform.name === 'facebook') {
+            return {
+              ...platform,
+              needsReauth: Math.random() > 0.5 // Random for demo purposes
+            };
+          }
+          return platform;
+        });
+        
+        setPlatforms(platformsWithStatus);
+      } catch (error) {
+        console.error('Error fetching platform status:', error);
+      }
+    };
+    
+    if (businessId) {
+      fetchPlatformStatus();
+    }
+  }, [businessId]);
 
   if (minimal) {
     return (

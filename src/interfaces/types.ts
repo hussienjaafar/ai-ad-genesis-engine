@@ -1,4 +1,3 @@
-
 export type Industry = 
   | "ecommerce" 
   | "real_estate" 
@@ -31,10 +30,10 @@ export interface BusinessProfile {
 
 export interface AdPlatform {
   id: string;
-  name: "facebook" | "google" | "tiktok" | "linkedin";
+  name: string;
   isConnected: boolean;
-  lastSynced: string | null;
-  accountId?: string;
+  lastSynced?: string;
+  needsReauth?: boolean;
 }
 
 export interface PerformanceMetric {

@@ -9,6 +9,7 @@ import crypto from 'crypto';
  */
 export function encrypt(text: string, key: string = process.env.OAUTH_ENCRYPTION_KEY || ''): string {
   if (!key) throw new Error('Encryption key not provided');
+  if (key.length !== 32) throw new Error('Encryption key must be exactly 32 characters in length');
 
   // Derive a key using scrypt
   const salt = crypto.randomBytes(16);
@@ -44,6 +45,7 @@ export function encrypt(text: string, key: string = process.env.OAUTH_ENCRYPTION
  */
 export function decrypt(encryptedData: string, key: string = process.env.OAUTH_ENCRYPTION_KEY || ''): string {
   if (!key) throw new Error('Encryption key not provided');
+  if (key.length !== 32) throw new Error('Encryption key must be exactly 32 characters in length');
   
   // Parse the encrypted data
   const { salt, iv, encrypted, authTag } = JSON.parse(encryptedData);
@@ -66,4 +68,12 @@ export function decrypt(encryptedData: string, key: string = process.env.OAUTH_E
   decrypted += decipher.final('utf8');
   
   return decrypted;
+}
+
+/**
+ * Generates a crypto-secure random string for use as a state parameter
+ * @returns Random string suitable for OAuth state parameter
+ */
+export function generateSecureRandomString(): string {
+  return crypto.randomUUID();
 }

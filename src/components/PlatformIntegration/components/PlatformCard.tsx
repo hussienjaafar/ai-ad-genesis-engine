@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircleIcon, ExternalLinkIcon } from "lucide-react";
+import { CheckCircleIcon, ExternalLinkIcon, AlertCircleIcon } from "lucide-react";
 import { AdPlatform } from "@/interfaces/types";
 import { PlatformIcon } from "./PlatformIcon";
 import { getPlatformName, getPlatformDescription } from "@/utils/platformUtils";
@@ -23,8 +23,11 @@ export const PlatformCard = ({ platform, minimal = false, onConnect, isLoading =
               <PlatformIcon platform={platform.name} />
               <CardTitle className="text-lg">{getPlatformName(platform.name)}</CardTitle>
             </div>
-            {platform.isConnected && (
+            {platform.isConnected && !platform.needsReauth && (
               <CheckCircleIcon className="h-5 w-5 text-success-600" />
+            )}
+            {platform.isConnected && platform.needsReauth && (
+              <AlertCircleIcon className="h-5 w-5 text-warning-500" />
             )}
           </div>
         </CardHeader>
@@ -37,6 +40,15 @@ export const PlatformCard = ({ platform, minimal = false, onConnect, isLoading =
               disabled={isLoading}
             >
               {isLoading ? "Connecting..." : "Connect"}
+            </Button>
+          ) : platform.needsReauth ? (
+            <Button 
+              onClick={() => onConnect(platform)}
+              className="w-full"
+              variant="outline"
+              disabled={isLoading}
+            >
+              {isLoading ? "Reconnecting..." : "Reconnect"}
             </Button>
           ) : (
             <Button 
@@ -60,8 +72,14 @@ export const PlatformCard = ({ platform, minimal = false, onConnect, isLoading =
             <PlatformIcon platform={platform.name} />
             <CardTitle>{getPlatformName(platform.name)}</CardTitle>
           </div>
-          {platform.isConnected && (
+          {platform.isConnected && !platform.needsReauth && (
             <CheckCircleIcon className="h-5 w-5 text-success-600" />
+          )}
+          {platform.isConnected && platform.needsReauth && (
+            <div className="flex items-center gap-1 text-warning-500">
+              <AlertCircleIcon className="h-5 w-5" />
+              <span className="text-xs font-medium">Re-auth required</span>
+            </div>
           )}
         </div>
         <CardDescription>
@@ -84,6 +102,15 @@ export const PlatformCard = ({ platform, minimal = false, onConnect, isLoading =
             disabled={isLoading}
           >
             {isLoading ? "Connecting..." : "Connect"} <ExternalLinkIcon className="ml-2 h-4 w-4" />
+          </Button>
+        ) : platform.needsReauth ? (
+          <Button 
+            onClick={() => onConnect(platform)}
+            className="w-full"
+            variant="warning"
+            disabled={isLoading}
+          >
+            {isLoading ? "Reconnecting..." : "Reconnect"} <ExternalLinkIcon className="ml-2 h-4 w-4" />
           </Button>
         ) : (
           <div className="flex gap-2 w-full">

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useContentGeneration } from "@/hooks/useContentGeneration";
-import { ContentFormValues, contentFormSchema, contentTypeMap } from "./types";
+import { ContentFormValues, contentFormSchema, contentTypeMap, ContentType } from "./types";
 
 export function useContentForm(businessId: string, onContentGenerated: (content: any) => void) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -31,7 +31,7 @@ export function useContentForm(businessId: string, onContentGenerated: (content:
     
     generateContent(
       { 
-        contentType: contentTypeMap[values.contentType],
+        contentType: contentTypeMap[values.contentType as ContentType],
         params 
       },
       {

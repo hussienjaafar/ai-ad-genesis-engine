@@ -71,3 +71,24 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## Authentication
+
+This application uses a secure cookie-based authentication system:
+
+### How it works:
+1. Access tokens are short-lived (15 minutes) and stored only in memory
+2. Refresh tokens are long-lived (7 days) and stored as HTTP-only cookies
+3. When the access token expires, the system automatically refreshes it using the cookie
+
+### Using Swagger UI:
+1. Navigate to `/docs` endpoint
+2. Click the "Authorize" button at the top
+3. Under "cookieAuth", the refresh token cookie will be automatically included
+4. Protected endpoints will now work with your authentication
+
+### Security Features:
+- Access tokens are never stored in localStorage
+- Refresh tokens are HttpOnly cookies (not accessible via JavaScript)
+- CORS is configured to allow credentials only from whitelisted origins
+- Rate limiting prevents brute force attempts

@@ -1,10 +1,8 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import { useAccessToken } from './useAccessToken';
-import { setAccessToken as setGlobalAccessToken } from '@/lib/api';
 
 interface User {
   id: string;
@@ -41,7 +39,6 @@ export function useAuth() {
     },
     onSuccess: (data) => {
       setAccessToken(data.accessToken);
-      setGlobalAccessToken(data.accessToken);
       queryClient.setQueryData(['auth', 'me'], data.user);
       toast.success('Successfully logged in');
       navigate('/');
@@ -55,7 +52,6 @@ export function useAuth() {
     },
     onSuccess: (data) => {
       setAccessToken(data.accessToken);
-      setGlobalAccessToken(data.accessToken);
       queryClient.setQueryData(['auth', 'me'], data.user);
       toast.success('Successfully registered');
       navigate('/onboarding');
@@ -67,7 +63,6 @@ export function useAuth() {
       await api.post('/auth/logout');
     } finally {
       setAccessToken(null);
-      setGlobalAccessToken(null);
       queryClient.setQueryData(['auth', 'me'], null);
       navigate('/login');
     }

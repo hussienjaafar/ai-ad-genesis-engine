@@ -1,0 +1,19 @@
+
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "ai-ad-engine.fullname" . }}-etl-rules
+  labels:
+    {{- include "ai-ad-engine.labels" . | nindent 4 }}
+spec:
+  groups:
+  - name: etl.rules
+    rules:
+    - alert: ETLJobFailures
+      expr: (etl_job_failures_total - etl_job_failures_total offset 5m) > 0
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "ETL jobs failing"
+        description: "Check logs for details"

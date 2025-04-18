@@ -1,0 +1,20 @@
+
+{
+  "common": {
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "loading": "Loading..."
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "username": "Username",
+    "password": "Password",
+    "oauthCancelled": "Platform connection was cancelled"
+  },
+  "platforms": {
+    "connect": "Connect",
+    "reconnect": "Reconnect",
+    "disconnect": "Disconnect"
+  }
+}

@@ -63,8 +63,10 @@ export class GoogleOAuthController {
       const authUrl = oauth2Client.generateAuthUrl({
         access_type: 'offline',
         scope: [
-          'https://www.googleapis.com/auth/adwords',
-          'https://www.googleapis.com/auth/userinfo.email'
+          'openid',
+          'profile',
+          'email',
+          'https://www.googleapis.com/auth/adwords'
         ],
         state,
         prompt: hasGoogleConnection ? 'select_account' : 'consent',

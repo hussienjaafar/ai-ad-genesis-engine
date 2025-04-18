@@ -29,6 +29,7 @@ router.get('/meta/init', OAuthController.metaInit);
  *   get:
  *     summary: Handle Meta OAuth callback
  *     tags: [OAuth]
+ *     security: []
  *     parameters:
  *       - in: query
  *         name: code
@@ -66,6 +67,7 @@ router.get('/google/init', OAuthController.googleInit);
  *   get:
  *     summary: Handle Google OAuth callback
  *     tags: [OAuth]
+ *     security: []
  *     parameters:
  *       - in: query
  *         name: code

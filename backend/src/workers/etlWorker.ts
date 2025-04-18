@@ -8,6 +8,9 @@ import { decrypt } from '../lib/crypto';
 import prom from 'prom-client';
 import pLimit from 'p-limit';
 
+// Alert service import for notification
+import alertService from '../services/alertService';
+
 // Prometheus metrics
 const etlJobsTotal = new prom.Counter({
   name: 'etl_jobs_total',
@@ -32,8 +35,21 @@ const etlRetryTotal = new prom.Counter({
   labelValues: ['platform'],
 });
 
-// Rate limiter - 5 requests per second
-const limiter = pLimit(5);
+// Global rate limiter - 5 requests per second
+const globalLimiter = pLimit(5);
+
+// Business-specific concurrency limiters
+const businessLimiters = new Map();
+
+/**
+ * Get or create a per-business rate limiter
+ */
+function getBusinessLimiter(businessId: string) {
+  if (!businessLimiters.has(businessId)) {
+    businessLimiters.set(businessId, pLimit(3)); // 3 concurrent requests per business
+  }
+  return businessLimiters.get(businessId);
+}
 
 /**
  * Makes an HTTP request with exponential backoff retry
@@ -44,7 +60,7 @@ const limiter = pLimit(5);
  */
 async function requestWithRetry<T>(fn: () => Promise<T>, retries = 5, platform: string): Promise<T> {
   try {
-    return await limiter(() => fn());
+    return await globalLimiter(() => fn());
   } catch (error: any) {
     // Check if we should retry (5xx errors or rate limit)
     const shouldRetry = 
@@ -70,6 +86,45 @@ async function requestWithRetry<T>(fn: () => Promise<T>, retries = 5, platform: 
       return requestWithRetry(fn, retries - 1, platform);
     }
     
+    // Special handling for Meta rate limit errors after all retries
+    if (error.response?.data?.error?.code === 17 && retries === 0) {
+      // If this is a Meta rate limit error and we're out of retries
+      if (error.businessId) {
+        console.error(`Rate limit persisted for business ${error.businessId} after max retries`);
+        
+        // Mark business as having an error
+        const client = new MongoClient(process.env.MONGODB_URI as string);
+        try {
+          await client.connect();
+          const db = client.db();
+          
+          await db.collection('businesses').updateOne(
+            { _id: new ObjectId(error.businessId) },
+            { 
+              $set: { 
+                'integrations.adPlatforms.facebook.status': 'error',
+                'integrations.adPlatforms.facebook.lastErrorMessage': 'Rate limit exceeded after multiple retries',
+                'integrations.adPlatforms.facebook.lastErrorTime': new Date().toISOString()
+              }
+            }
+          );
+          
+          // Send alert
+          await alertService.send({
+            level: 'error',
+            message: `Meta rate limit persisted for business ${error.businessId} after max retries`,
+            source: 'ETL',
+            businessId: error.businessId,
+            details: error.response?.data
+          });
+        } catch (dbError) {
+          console.error('Failed to update business status:', dbError);
+        } finally {
+          await client.close();
+        }
+      }
+    }
+    
     // No more retries or shouldn't retry
     etlJobFailures.inc({ platform });
     throw error;
@@ -79,30 +134,38 @@ async function requestWithRetry<T>(fn: () => Promise<T>, retries = 5, platform: 
 /**
  * Fetch Meta Ads insights with pagination support
  */
-async function fetchMetaInsights(token: string, accountId: string, yesterday: string): Promise<any[]> {
+async function fetchMetaInsights(token: string, accountId: string, yesterday: string, businessId: string): Promise<any[]> {
   let allResults: any[] = [];
   let nextPageUrl = `https://graph.facebook.com/v17.0/act_${accountId}/insights?access_token=${token}&fields=ad_id,impressions,clicks,spend,inline_link_clicks,actions&level=ad&time_range={"since":"${yesterday}","until":"${yesterday}"}`;
   
+  const businessLimiter = getBusinessLimiter(businessId);
+  
   while (nextPageUrl) {
-    const response = await requestWithRetry(
-      () => axios.get(nextPageUrl),
-      5,
-      'facebook'
-    );
-    
-    etlPagesFetched.inc({ platform: 'facebook' });
-    
-    allResults = [...allResults, ...response.data.data];
-    
-    // Check for next page
-    if (response.data.paging && response.data.paging.next) {
-      nextPageUrl = response.data.paging.next;
-    } else {
-      nextPageUrl = '';
+    try {
+      const response = await businessLimiter(() => requestWithRetry(
+        () => axios.get(nextPageUrl),
+        5,
+        'facebook'
+      ));
+      
+      etlPagesFetched.inc({ platform: 'facebook' });
+      
+      allResults = [...allResults, ...response.data.data];
+      
+      // Check for next page
+      if (response.data.paging && response.data.paging.next) {
+        nextPageUrl = response.data.paging.next;
+      } else {
+        nextPageUrl = '';
+      }
+      
+      // Simple delay between requests (200ms) to avoid overwhelming the API
+      await new Promise(resolve => setTimeout(resolve, 200));
+    } catch (error: any) {
+      // Add businessId to error object for special handling
+      error.businessId = businessId;
+      throw error;
     }
-    
-    // Simple delay between requests (200ms) to avoid overwhelming the API
-    await new Promise(resolve => setTimeout(resolve, 200));
   }
   
   return allResults;
@@ -111,7 +174,7 @@ async function fetchMetaInsights(token: string, accountId: string, yesterday: st
 /**
  * Fetch Google Ads reports with pagination support
  */
-async function fetchGoogleAdsReports(refreshToken: string, clientId: string, clientSecret: string, yesterday: string): Promise<any[]> {
+async function fetchGoogleAdsReports(refreshToken: string, clientId: string, clientSecret: string, yesterday: string, businessId: string): Promise<any[]> {
   const oauth2Client = new OAuth2Client(clientId, clientSecret);
   
   oauth2Client.setCredentials({
@@ -126,8 +189,10 @@ async function fetchGoogleAdsReports(refreshToken: string, clientId: string, cli
   let allResults: any[] = [];
   let pageToken = '';
   
+  const businessLimiter = getBusinessLimiter(businessId);
+  
   do {
-    const response = await requestWithRetry(
+    const response = await businessLimiter(() => requestWithRetry(
       async () => {
         // Mock Google Ads API call
         // In reality, this would use the Google Ads API client
@@ -135,7 +200,7 @@ async function fetchGoogleAdsReports(refreshToken: string, clientId: string, cli
       },
       5,
       'google'
-    );
+    ));
     
     etlPagesFetched.inc({ platform: 'google' });
     
@@ -223,15 +288,21 @@ async function runEtl() {
           const token = decrypt(encryptedToken);
           const accountId = business.integrations.adPlatforms.facebook.accountId;
           
-          const insights = await fetchMetaInsights(token, accountId, yesterdayStr);
+          const insights = await fetchMetaInsights(token, accountId, yesterdayStr, businessId);
           const processedData = processAdPerformance(insights, 'facebook', businessId, yesterdayStr);
           
           allPerformanceData.push(...processedData);
           
-          // Update last synced timestamp
+          // Update last synced timestamp and clear any error status
           await businessCollection.updateOne(
             { _id: business._id },
-            { $set: { 'integrations.adPlatforms.facebook.lastSynced': new Date().toISOString() } }
+            { 
+              $set: { 
+                'integrations.adPlatforms.facebook.lastSynced': new Date().toISOString(),
+                'integrations.adPlatforms.facebook.status': 'active',
+                'integrations.adPlatforms.facebook.lastErrorMessage': null
+              }
+            }
           );
           
           console.log(`Successfully processed ${processedData.length} Facebook ads for business ${businessId}`);
@@ -254,7 +325,8 @@ async function runEtl() {
             refreshToken,
             process.env.GOOGLE_CLIENT_ID || '',
             process.env.GOOGLE_CLIENT_SECRET || '',
-            yesterdayStr
+            yesterdayStr,
+            businessId
           );
           
           const processedData = processAdPerformance(googleReports, 'google', businessId, yesterdayStr);

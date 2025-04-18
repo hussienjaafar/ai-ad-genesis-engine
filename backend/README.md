@@ -109,6 +109,27 @@ The ETL process:
 6. Handles rate limiting with exponential backoff and jitter
 7. Emits Prometheus metrics for monitoring
 
+### Alerting
+
+The system includes automated alerting for important events:
+
+1. **ETL Job Failures**:
+   - Prometheus metrics track job failures by platform
+   - Alertmanager rules trigger when failure counts increase
+   - Alerts are sent via configurable channels (Slack, email)
+
+2. **Rate Limit Handling**:
+   - After multiple retries for rate-limited requests, businesses are flagged
+   - Alert notifications are sent to operations team
+   - Integration status is updated for visibility in the UI
+
+3. **Alertmanager Configuration**:
+   - Monitors ETL job failures with a 5-minute evaluation window
+   - Warning alerts are triggered if failures increase
+   - Includes summary and description for quick troubleshooting
+
+The alert notification system is configurable via environment variables for Slack webhooks and email addresses.
+
 ### Using Docker Compose
 
 To run both the backend and MongoDB in Docker containers:

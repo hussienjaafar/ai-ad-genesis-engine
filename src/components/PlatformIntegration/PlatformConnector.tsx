@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { AdPlatform } from "@/interfaces/types";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -27,7 +27,7 @@ const PlatformConnector = ({
   const { platforms, setPlatforms } = usePlatformStatus(businessId);
   
   // Check if returning from OAuth flow with success
-  useState(() => {
+  useEffect(() => {
     const query = new URLSearchParams(location.search);
     const success = query.get('success');
     
@@ -52,7 +52,7 @@ const PlatformConnector = ({
         navigate(location.pathname, { replace: true });
       }
     }
-  }, [location, platforms, onConnected, navigate]);
+  }, [location, platforms, onConnected, navigate, setPlatforms]);
 
   const handleConnect = (platform: AdPlatform) => {
     if (platform.name === "facebook" || platform.name === "google") {

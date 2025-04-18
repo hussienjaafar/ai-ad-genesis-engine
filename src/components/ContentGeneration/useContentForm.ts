@@ -31,7 +31,7 @@ export function useContentForm(businessId: string, onContentGenerated: (content:
     
     generateContent(
       { 
-        contentType: contentTypeMap[values.contentType],
+        contentType: contentTypeMap[values.contentType as ContentType],
         params 
       },
       {

@@ -29,9 +29,13 @@ export function useContentForm(businessId: string, onContentGenerated: (content:
       additionalDetails: values.additionalNotes || undefined,
     };
     
+    // Ensure that we're using the correct type for the contentType parameter
+    const contentType = values.contentType as ContentType;
+    const mappedContentType = contentTypeMap[contentType];
+    
     generateContent(
       { 
-        contentType: contentTypeMap[values.contentType as ContentType],
+        contentType: mappedContentType,
         params 
       },
       {

@@ -26,10 +26,10 @@ export const useAgencies = () => {
       const response = await api.put(`/agencies/${agencyId}/clients`, data);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['agencies', agencyId] });
-      const action = "add" ? "added to" : "removed from";
-      toast.success(`Clients ${action} agency successfully`);
+      const actionVerb = variables.action === 'add' ? "added to" : "removed from";
+      toast.success(`Clients ${actionVerb} agency successfully`);
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.error || 'Failed to update agency clients');

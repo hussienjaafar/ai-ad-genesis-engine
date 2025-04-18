@@ -1,3 +1,4 @@
+
 import { randomUUID } from 'crypto';
 import jwt from 'jsonwebtoken';
 import { CookieOptions } from 'express';
@@ -29,6 +30,8 @@ interface TokenPayload {
 }
 
 export class AuthService {
+  public static readonly COOKIE_OPTIONS: CookieOptions = COOKIE_OPTIONS;
+
   private static generateTokens(user: IUser, ip?: string, userAgent?: string): Promise<TokenPair> {
     return new Promise(async (resolve, reject) => {
       try {

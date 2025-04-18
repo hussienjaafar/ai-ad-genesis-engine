@@ -2,12 +2,21 @@
 import axios from 'axios';
 import { toast } from 'sonner';
 
+// Singleton for access token (used before context is available)
+let inMemoryToken: string | null = null;
+
+export const setAccessToken = (token: string | null) => {
+  inMemoryToken = token;
+};
+
+export const getAccessToken = () => inMemoryToken;
+
 const api = axios.create({
   baseURL: '/api',
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,
+  withCredentials: true, // Always send cookies with requests
 });
 
 let isRefreshing = false;
@@ -27,7 +36,7 @@ const processQueue = (error: any = null) => {
 
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken');
+    const token = inMemoryToken;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -60,14 +69,14 @@ api.interceptors.response.use(
         const response = await api.post('/auth/refresh');
         const { accessToken } = response.data;
         
-        localStorage.setItem('accessToken', accessToken);
+        setAccessToken(accessToken);
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         
         processQueue();
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError);
-        localStorage.removeItem('accessToken');
+        setAccessToken(null);
         window.location.href = '/login';
         return Promise.reject(refreshError);
       } finally {

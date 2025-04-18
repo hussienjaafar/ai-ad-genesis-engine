@@ -32,6 +32,21 @@ npm run dev
 
 The API will be available at http://localhost:4000 with API documentation at http://localhost:4000/docs
 
+4. Create the TTL index for refresh tokens (only needed once):
+
+```bash
+npm run migrate-indexes
+```
+
+### Cookie-Based Authentication
+
+The application uses a secure cookie-based authentication system:
+
+- Access tokens are short-lived (15 minutes by default) and stored only in memory
+- Refresh tokens are long-lived (7 days by default) and stored as HTTP-only cookies
+- CORS is configured to allow credentials from whitelisted origins (set via FRONTEND_URL env variable)
+- The frontend uses `withCredentials: true` for all API requests to ensure cookies are sent
+
 ### Using Docker Compose
 
 To run both the backend and MongoDB in Docker containers:
@@ -51,6 +66,7 @@ Visit http://localhost:4000/docs to access the API documentation.
 - `npm test` - Run tests
 - `npm run lint` - Run linting
 - `npm run seed` - Seed the database with initial data
+- `npm run migrate-indexes` - Create database indexes (run once after setup)
 
 ## API Endpoints
 
@@ -58,6 +74,7 @@ Visit http://localhost:4000/docs to access the API documentation.
   - POST `/api/auth/register` - Register a new user
   - POST `/api/auth/login` - Log in
   - POST `/api/auth/refresh` - Refresh access token
+  - POST `/api/auth/logout` - Log out (invalidates refresh token)
   - GET `/api/auth/me` - Get current user profile
 
 - **Businesses**:

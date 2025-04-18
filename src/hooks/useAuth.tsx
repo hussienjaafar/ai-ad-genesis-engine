@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import api from '@/lib/api';
 import { toast } from 'sonner';
+import { useAccessToken } from './useAccessToken';
+import { setAccessToken as setGlobalAccessToken } from '@/lib/api';
 
 interface User {
   id: string;
@@ -18,6 +20,7 @@ interface AuthResponse {
 export function useAuth() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { accessToken, setAccessToken } = useAccessToken();
 
   const { data: user, isLoading } = useQuery({
     queryKey: ['auth', 'me'],
@@ -37,7 +40,8 @@ export function useAuth() {
       return response.data;
     },
     onSuccess: (data) => {
-      localStorage.setItem('accessToken', data.accessToken);
+      setAccessToken(data.accessToken);
+      setGlobalAccessToken(data.accessToken);
       queryClient.setQueryData(['auth', 'me'], data.user);
       toast.success('Successfully logged in');
       navigate('/');
@@ -50,7 +54,8 @@ export function useAuth() {
       return response.data;
     },
     onSuccess: (data) => {
-      localStorage.setItem('accessToken', data.accessToken);
+      setAccessToken(data.accessToken);
+      setGlobalAccessToken(data.accessToken);
       queryClient.setQueryData(['auth', 'me'], data.user);
       toast.success('Successfully registered');
       navigate('/onboarding');
@@ -61,7 +66,8 @@ export function useAuth() {
     try {
       await api.post('/auth/logout');
     } finally {
-      localStorage.removeItem('accessToken');
+      setAccessToken(null);
+      setGlobalAccessToken(null);
       queryClient.setQueryData(['auth', 'me'], null);
       navigate('/login');
     }

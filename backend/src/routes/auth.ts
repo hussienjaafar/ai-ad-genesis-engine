@@ -15,6 +15,15 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Rate limiting for refresh token attempts
+const refreshLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 20, // 20 requests per minute
+  message: { error: 'Too many refresh requests, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 /**
  * @swagger
  * tags:
@@ -25,7 +34,7 @@ const loginLimiter = rateLimit({
 // Public routes
 router.post('/register', AuthController.register);
 router.post('/login', loginLimiter, AuthController.login);
-router.post('/refresh', AuthController.refresh);
+router.post('/refresh', refreshLimiter, AuthController.refresh);
 
 // Protected routes
 router.post('/logout', authorize, AuthController.logout);

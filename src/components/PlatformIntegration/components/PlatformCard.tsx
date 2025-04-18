@@ -1,9 +1,9 @@
-
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircleIcon, ExternalLinkIcon } from "lucide-react";
 import { AdPlatform } from "@/interfaces/types";
 import { PlatformIcon } from "./PlatformIcon";
+import { getPlatformName, getPlatformDescription } from "@/utils/platformUtils";
 
 interface PlatformCardProps {
   platform: AdPlatform;
@@ -12,36 +12,6 @@ interface PlatformCardProps {
 }
 
 export const PlatformCard = ({ platform, minimal = false, onConnect }: PlatformCardProps) => {
-  const getPlatformName = (platformCode: string) => {
-    switch (platformCode) {
-      case "facebook":
-        return "Facebook Ads";
-      case "google":
-        return "Google Ads";
-      case "linkedin":
-        return "LinkedIn Ads";
-      case "tiktok":
-        return "TikTok Ads";
-      default:
-        return platformCode;
-    }
-  };
-
-  const getPlatformDescription = (platformCode: string) => {
-    switch (platformCode) {
-      case "facebook":
-        return "Connect to Facebook Ads to analyze campaigns and generate optimized ad content.";
-      case "google":
-        return "Connect to Google Ads to analyze search campaigns and generate optimized ad content.";
-      case "linkedin":
-        return "Connect to LinkedIn Ads for B2B campaign analysis and ad generation.";
-      case "tiktok":
-        return "Connect to TikTok Ads for video ad performance analysis and content generation.";
-      default:
-        return "";
-    }
-  };
-
   if (minimal) {
     return (
       <Card className={`${platform.isConnected ? 'border-success-500' : ''}`}>

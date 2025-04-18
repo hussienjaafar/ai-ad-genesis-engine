@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { AdPlatform } from "@/interfaces/types";
+import { getPlatformName } from "@/utils/platformUtils";
 
 interface ConnectPlatformDialogProps {
   platform: AdPlatform | null;
@@ -13,21 +14,6 @@ interface ConnectPlatformDialogProps {
 }
 
 export const ConnectPlatformDialog = ({ platform, isOpen, onOpenChange, onConfirm }: ConnectPlatformDialogProps) => {
-  const getPlatformName = (platformCode: string) => {
-    switch (platformCode) {
-      case "facebook":
-        return "Facebook Ads";
-      case "google":
-        return "Google Ads";
-      case "linkedin":
-        return "LinkedIn Ads";
-      case "tiktok":
-        return "TikTok Ads";
-      default:
-        return platformCode;
-    }
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>

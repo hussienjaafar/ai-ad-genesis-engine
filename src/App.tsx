@@ -15,6 +15,8 @@ import NotFound from './pages/NotFound';
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 import Experiments from "./pages/Experiments";
 import ExperimentResults from "./pages/ExperimentResults";
+import Agencies from "./pages/Agencies";
+import AgencyOverview from "./pages/AgencyOverview";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,6 +40,8 @@ function App() {
         <Route path="/analytics" element={<AnalyticsDashboard />} />
         <Route path="/businesses/:id/experiments" element={<Experiments />} />
         <Route path="/experiments/:id" element={<ExperimentResults />} />
+        <Route path="/agencies" element={<Agencies />} />
+        <Route path="/agencies/:id/overview" element={<AgencyOverview />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster position="top-right" />

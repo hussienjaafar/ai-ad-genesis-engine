@@ -1,121 +1,150 @@
-
-import {
-  LayoutDashboard,
-  Settings,
-  Users,
-  HelpCircle,
-  BarChart3,
-} from "lucide-react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetDescription, 
+  SheetHeader, 
+  SheetTitle, 
+  SheetTrigger 
+} from "@/components/ui/sheet";
+import { 
+  NavigationMenu,
+  NavigationMenuList,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  navigationMenuTriggerStyle
+} from "@/components/ui/navigation-menu";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/context/AuthContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Link } from "react-router-dom";
+import { 
+  Home, 
+  Building, 
+  BarChart, 
+  FlaskConical, 
+  Menu 
+} from "lucide-react";
 
-interface SidebarProps {
-  isOnboarded?: boolean;
-}
-
-export default function Sidebar({ isOnboarded = true }: SidebarProps) {
-  const location = useLocation();
-  const navigate = useNavigate();
+export default function Sidebar() {
   const { user, logout } = useAuth();
+  const isMobile = useIsMobile();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  useEffect(() => {
-    setIsMenuOpen(false);
-  }, [location.pathname]);
-
-  const handleLogout = async () => {
-    await logout();
-    navigate("/login");
-  };
-
+  
   const menuItems = [
     {
-      name: "Dashboard",
-      icon: <LayoutDashboard size={22} />,
-      path: "/",
-      active: location.pathname === "/",
+      title: "Home",
+      href: "/",
+      icon: <Home className="size-4" />,
+      roles: ["admin", "client", "staff", "agencyAdmin"]
     },
     {
-      name: "Users",
-      icon: <Users size={22} />,
-      path: "/users",
-      active: location.pathname === "/users",
+      title: "Businesses",
+      href: "/businesses",
+      icon: <Building className="size-4" />,
+      roles: ["admin", "client", "staff", "agencyAdmin"]
     },
     {
-      name: "Analytics",
-      icon: <BarChart3 size={22} />,
-      path: "/analytics",
-      active: location.pathname === "/analytics",
+      title: "Analytics",
+      href: "/analytics",
+      icon: <BarChart className="size-4" />,
+      roles: ["admin", "client", "staff", "agencyAdmin"]
     },
     {
-      name: "Settings",
-      icon: <Settings size={22} />,
-      path: "/settings",
-      active: location.pathname === "/settings",
+      title: "Experiments",
+      href: "/businesses/1/experiments", // TODO: Dynamic business ID
+      icon: <FlaskConical className="size-4" />,
+      roles: ["admin", "client", "staff", "agencyAdmin"]
     },
     {
-      name: "Help",
-      icon: <HelpCircle size={22} />,
-      path: "/help",
-      active: location.pathname === "/help",
+      title: "Agencies",
+      href: "/agencies",
+      icon: <Building className="size-4" />,
+      roles: ["agencyAdmin"]
     },
   ];
 
+  const renderMenuItems = () => {
+    return menuItems.filter(item => item.roles.includes(user?.role || '')).map((item) => (
+      <NavigationMenuItem key={item.title}>
+        <Link to={item.href} className="block">
+          <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+            <div className="flex items-center space-x-2">
+              {item.icon}
+              <span>{item.title}</span>
+            </div>
+          </NavigationMenuLink>
+        </Link>
+      </NavigationMenuItem>
+    ));
+  };
+
+  if (isMobile) {
+    return (
+      <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="icon" className="absolute top-4 left-4">
+            <Menu className="h-5 w-5" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="w-64 p-0">
+          <SheetHeader className="pl-6 pr-4 pt-6 pb-4">
+            <SheetTitle>Menu</SheetTitle>
+            <SheetDescription>
+              Navigate through the application.
+            </SheetDescription>
+          </SheetHeader>
+          <NavigationMenu orientation="vertical" className="border-none">
+            <NavigationMenuList className="flex flex-col space-y-1">
+              {renderMenuItems()}
+            </NavigationMenuList>
+          </NavigationMenu>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
   return (
-    <div className="flex flex-col h-full bg-gray-50 border-r py-4 w-64">
-      <div className="px-6 mb-8">
-        <Button variant="ghost" className="justify-start w-full hover:bg-gray-100">
-          <span className="font-bold text-lg">AdGenesis AI</span>
-        </Button>
-      </div>
-
-      <nav className="flex-1">
-        <ul>
-          {menuItems.map((item) => (
-            <li key={item.name}>
-              <Button
-                variant="ghost"
-                className={`justify-start w-full px-6 hover:bg-gray-100 ${item.active ? 'text-primary font-semibold' : 'text-gray-700'
-                  }`}
-                onClick={() => {
-                  navigate(item.path);
-                  setIsMenuOpen(false);
-                }}
-              >
-                {item.icon}
-                <span className="ml-3">{item.name}</span>
+    <aside className="w-64 border-r flex-shrink-0">
+      <div className="flex flex-col h-full">
+        <div className="p-4">
+          <Link to="/" className="font-bold text-lg">
+            Growth Engine
+          </Link>
+        </div>
+        <NavigationMenu className="flex-1 border-0">
+          <NavigationMenuList className="flex flex-col space-y-1">
+            {renderMenuItems()}
+          </NavigationMenuList>
+        </NavigationMenu>
+        <div className="p-4 border-t">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="w-full justify-start gap-2">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src="https://github.com/shadcn.png" alt="Shadcn" />
+                  <AvatarFallback>CN</AvatarFallback>
+                </Avatar>
+                <span>{user?.email}</span>
               </Button>
-            </li>
-          ))}
-        </ul>
-      </nav>
-
-      <div className="border-t py-4 mt-4">
-        <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="justify-start w-full px-6 font-normal hover:bg-gray-100">
-              <Avatar className="mr-3 h-8 w-8">
-                <AvatarImage src="https://github.com/shadcn.png" alt="Avatar" />
-                <AvatarFallback>CN</AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col text-left">
-                <span className="text-sm font-medium leading-none">{user?.name || 'User'}</span>
-                <span className="text-xs text-gray-500">{user?.email || 'user@example.com'}</span>
-              </div>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end" forceMount>
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" forceMount>
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
-    </div>
+    </aside>
   );
 }

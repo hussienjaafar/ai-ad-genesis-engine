@@ -56,5 +56,12 @@ export function useBusinesses() {
     createBusiness: createBusinessMutation.mutate,
     getBusiness,
     updateOfferings,
+    useGetAllBusinesses: () => useQuery({
+      queryKey: ['businesses'],
+      queryFn: async () => {
+        const response = await api.get('/businesses');
+        return response.data;
+      }
+    })
   };
 }

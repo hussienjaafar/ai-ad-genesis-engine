@@ -1,0 +1,39 @@
+
+version: '3.8'
+
+services:
+  frontend:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:4000
+
+  mongo:
+    image: mongo:7-jammy
+    restart: always
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - backend
+
+  backend:
+    build: ./backend
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/ai_ad_system
+      - JWT_SECRET=super-secret-123
+      - PORT=4000
+    ports:
+      - "4000:4000"
+    depends_on:
+      - mongo
+    networks:
+      - backend
+
+networks:
+  backend:
+
+volumes:
+  mongo-data:

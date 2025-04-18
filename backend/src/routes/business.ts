@@ -39,8 +39,8 @@ router.post('/:id/platforms/:platform', authorize, BusinessController.storePlatf
  *   description: Content generation endpoints
  */
 
-// Generate content for a business
-router.post('/:id/content/generate', authorize, ContentController.generateContent);
+// Generate content for a business - admin or client owner only
+router.post('/:id/content/generate', authorize, checkRole('admin', 'clientOwner'), ContentController.generateContent);
 
 // Get content for a business
 router.get('/:id/content', authorize, ContentController.getContentForBusiness);

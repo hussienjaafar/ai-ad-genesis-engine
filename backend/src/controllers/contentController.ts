@@ -12,6 +12,7 @@ export class ContentController {
    *     tags: [Content]
    *     security:
    *       - bearerAuth: []
+   *       - cookieAuth: []
    *     parameters:
    *       - in: path
    *         name: id
@@ -30,6 +31,7 @@ export class ContentController {
    *             properties:
    *               contentType:
    *                 type: string
+   *                 enum: [facebook, google, videoScript]
    *               params:
    *                 type: object
    *     responses:
@@ -37,8 +39,14 @@ export class ContentController {
    *         description: Content generated successfully
    *       400:
    *         description: Bad request
+   *       401:
+   *         description: Unauthorized
+   *       403:
+   *         description: Forbidden - Insufficient permissions
    *       404:
    *         description: Business not found
+   *       413:
+   *         description: Payload too large - Prompt exceeds token limit
    */
   public static async generateContent(req: Request, res: Response): Promise<Response> {
     try {
@@ -53,13 +61,29 @@ export class ContentController {
         return res.status(400).json({ error: 'Content type is required' });
       }
 
+      if (!['facebook', 'google', 'videoScript'].includes(contentType)) {
+        return res.status(400).json({ error: 'Invalid content type. Must be one of: facebook, google, videoScript' });
+      }
+
       if (!params || typeof params !== 'object') {
         return res.status(400).json({ error: 'Valid params object is required' });
       }
 
-      const content = await ContentGenerationService.generateContent(id, contentType, params);
-
-      return res.status(201).json(content);
+      try {
+        const content = await ContentGenerationService.generateContent(id, contentType, params);
+        return res.status(201).json({
+          contentId: content._id,
+          parsedContent: content.parsedContent
+        });
+      } catch (error: any) {
+        if (error.message.includes('token limit')) {
+          return res.status(413).json({ error: 'Prompt exceeds token limit' });
+        }
+        if (error.message.includes('Business not found')) {
+          return res.status(404).json({ error: 'Business not found' });
+        }
+        throw error;
+      }
     } catch (error: any) {
       console.error('Content generation error:', error);
       return res.status(500).json({ error: 'Failed to generate content' });
@@ -74,6 +98,7 @@ export class ContentController {
    *     tags: [Content]
    *     security:
    *       - bearerAuth: []
+   *       - cookieAuth: []
    *     parameters:
    *       - in: path
    *         name: id
@@ -99,6 +124,10 @@ export class ContentController {
    *         description: Content list retrieved successfully
    *       400:
    *         description: Bad request
+   *       401:
+   *         description: Unauthorized
+   *       403:
+   *         description: Forbidden
    */
   public static async getContentForBusiness(req: Request, res: Response): Promise<Response> {
     try {
@@ -128,6 +157,7 @@ export class ContentController {
    *     tags: [Content]
    *     security:
    *       - bearerAuth: []
+   *       - cookieAuth: []
    *     parameters:
    *       - in: path
    *         name: id
@@ -137,6 +167,10 @@ export class ContentController {
    *     responses:
    *       200:
    *         description: Content retrieved successfully
+   *       401:
+   *         description: Unauthorized
+   *       403:
+   *         description: Forbidden
    *       404:
    *         description: Content not found
    */

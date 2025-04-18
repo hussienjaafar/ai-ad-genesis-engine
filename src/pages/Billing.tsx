@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import MainLayout from '@/components/Layout/MainLayout';
@@ -8,7 +7,7 @@ import { ChangePlanModal } from '@/components/Billing/ChangePlanModal';
 import { useBilling } from '@/hooks/useBilling';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { ReloadIcon } from '@radix-ui/react-icons';
+import { RefreshCw } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 
@@ -67,14 +66,13 @@ export default function Billing() {
           </div>
           {isLoadingBillingDetails && (
             <Button variant="outline" disabled>
-              <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
               Loading
             </Button>
           )}
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
-          {/* Quota Card */}
           <QuotaProgress
             currentUsage={billingDetails?.usage?.currentUsage || 0}
             quota={billingDetails?.usage?.quota || 100000}
@@ -86,11 +84,9 @@ export default function Billing() {
             onCancelPlan={() => setShowCancelDialog(true)}
           />
 
-          {/* Usage Card */}
           <UsageCard businessId={businessId} />
         </div>
 
-        {/* Change Plan Modal */}
         <ChangePlanModal
           isOpen={showChangePlanModal}
           onClose={() => setShowChangePlanModal(false)}
@@ -100,7 +96,6 @@ export default function Billing() {
           isLoading={isSubscribing || isLoadingPlans}
         />
 
-        {/* Cancel Subscription Dialog */}
         <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { AdPlatform } from "@/interfaces/types";
@@ -26,7 +25,6 @@ const PlatformConnector = ({
   const { isLoading, currentPlatform: currentOAuthPlatform, initiateOAuth } = useOAuth();
   const { platforms, setPlatforms } = usePlatformStatus(businessId);
   
-  // Check if returning from OAuth flow with success
   useEffect(() => {
     const query = new URLSearchParams(location.search);
     const success = query.get('success');
@@ -48,7 +46,6 @@ const PlatformConnector = ({
         
         toast.success(`${platform.name} connected successfully!`);
         
-        // Remove query param without page reload
         navigate(location.pathname, { replace: true });
       }
     }
@@ -56,11 +53,9 @@ const PlatformConnector = ({
 
   const handleConnect = (platform: AdPlatform) => {
     if (platform.name === "facebook" || platform.name === "google") {
-      // Use OAuth flow for Facebook and Google
-      initiateOAuth(platform.name);
+      initiateOAuth(platform.name, businessId);
       setCurrentPlatform(platform);
     } else {
-      // Use dialog for other platforms
       setCurrentPlatform(platform);
       setIsDialogOpen(true);
     }

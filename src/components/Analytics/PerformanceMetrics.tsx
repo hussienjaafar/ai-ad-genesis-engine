@@ -44,11 +44,19 @@ const PerformanceMetrics = ({ isLoading, error, performanceData }: PerformanceMe
     );
   }
 
+  // Default values if totals are not available
+  const totals = performanceData.totals || {
+    impressions: 0,
+    clicks: 0,
+    ctr: 0,
+    spend: 0
+  };
+
   const metrics: PerformanceMetric[] = [
     {
       id: "impressions",
       name: "Impressions",
-      value: performanceData.totals.impressions || 0,
+      value: totals.impressions || 0,
       change: 10,
       unit: "number",
       isPositiveGood: true
@@ -56,7 +64,7 @@ const PerformanceMetrics = ({ isLoading, error, performanceData }: PerformanceMe
     {
       id: "clicks",
       name: "Clicks",
-      value: performanceData.totals.clicks || 0,
+      value: totals.clicks || 0,
       change: 5,
       unit: "number",
       isPositiveGood: true
@@ -64,7 +72,7 @@ const PerformanceMetrics = ({ isLoading, error, performanceData }: PerformanceMe
     {
       id: "ctr",
       name: "CTR",
-      value: (performanceData.totals.ctr || 0) * 100,
+      value: (totals.ctr || 0) * 100,
       change: 2,
       unit: "percentage",
       isPositiveGood: true
@@ -72,7 +80,7 @@ const PerformanceMetrics = ({ isLoading, error, performanceData }: PerformanceMe
     {
       id: "spend",
       name: "Spend",
-      value: performanceData.totals.spend || 0,
+      value: totals.spend || 0,
       change: -3,
       unit: "currency",
       currency: "USD",

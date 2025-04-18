@@ -8,6 +8,14 @@ export interface PerformanceMetrics {
     ctr: number;
   };
   daily: DailyMetric[];
+  totals?: {
+    impressions: number;
+    clicks: number;
+    spend: number;
+    leads: number;
+    ctr: number;
+    cpl: number;
+  };
 }
 
 export interface DailyMetric {

@@ -1,7 +1,7 @@
 
 import mongoose from 'mongoose';
 import request from 'supertest';
-import app from '../src/server';
+import { app } from '../src/server';
 import ContentModel from '../src/models/Content';
 import BusinessModel from '../src/models/Business';
 import UserModel from '../src/models/User';

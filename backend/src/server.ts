@@ -49,7 +49,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 });
 
 // Start server only if not being imported for testing
-if (require.main === module) {
+if (process.env.NODE_ENV !== 'test') {
   const startServer = async () => {
     try {
       await connectToDatabase();

@@ -63,14 +63,29 @@ export class ContentGenerationService {
       timestamp: new Date().toISOString(),
     };
 
-    let prompt = `Generate professional marketing content for the specified content type.
-Content Type: ${contentType}
-Requirements:
+    let prompt = `Generate professional marketing content for ${contentType}.
+Requirements and Parameters:
 `;
 
+    // Add each parameter as a requirement
     Object.entries(params).forEach(([key, value]) => {
-      prompt += `- ${key}: ${value}\n`;
+      if (value) {
+        prompt += `- ${key.charAt(0).toUpperCase() + key.slice(1)}: ${value}\n`;
+      }
     });
+
+    // Add specific instructions based on content type
+    switch (contentType) {
+      case 'facebook':
+        prompt += '\nCreate engaging social media copy that drives engagement and conversions.';
+        break;
+      case 'google':
+        prompt += '\nWrite compelling ad copy that maximizes click-through rates within character limits.';
+        break;
+      case 'videoScript':
+        prompt += '\nDevelop a clear, engaging video script that captures attention and delivers the message effectively.';
+        break;
+    }
 
     return prompt;
   }

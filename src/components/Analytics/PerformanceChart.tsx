@@ -4,10 +4,10 @@ import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, 
   CartesianGrid, Tooltip, Legend, ResponsiveContainer 
 } from "recharts";
-import { DailyMetric } from "@/interfaces/analytics";
+import { DailyPerformance } from "@/interfaces/analytics";
 
 interface PerformanceChartProps {
-  data: DailyMetric[];
+  data: DailyPerformance[];
   days: number;
 }
 

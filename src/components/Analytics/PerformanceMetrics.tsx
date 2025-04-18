@@ -48,8 +48,9 @@ const PerformanceMetrics = ({ isLoading, error, performanceData }: PerformanceMe
   const totals = performanceData.totals || {
     impressions: 0,
     clicks: 0,
-    ctr: 0,
-    spend: 0
+    spend: 0,
+    leads: 0,
+    ctr: 0 // Add the ctr property
   };
 
   const metrics: PerformanceMetric[] = [

@@ -1,5 +1,6 @@
 
-import { Types } from 'mongoose';
+// No need for mongoose import at the TypeScript interface level
+// Using plain TypeScript interfaces instead
 
 export interface DailyPerformance {
   date: string;
@@ -29,6 +30,7 @@ export interface PerformanceMetrics {
     impressions: number;
     clicks: number;
     leads: number;
+    ctr: number; // Adding the missing ctr property
     conversions?: number;
   };
   daily: DailyPerformance[];
@@ -60,4 +62,18 @@ export interface InsightData {
   patternInsights: PatternInsight[];
   businessId: string;
   createdAt: string;
+}
+
+// Add DailyMetric to fix the error in PerformanceChart.tsx
+export interface DailyMetric {
+  date: string;
+  impressions?: number;
+  clicks?: number;
+  conversions?: number;
+  spend?: number;
+  ctr?: number;
+  cpc?: number;
+  cpl?: number;
+  roas?: number;
+  // Make all properties optional to be safe
 }

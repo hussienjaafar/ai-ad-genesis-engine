@@ -107,7 +107,7 @@ export const PlatformCard = ({ platform, minimal = false, onConnect, isLoading =
           <Button 
             onClick={() => onConnect(platform)}
             className="w-full"
-            variant="warning"
+            variant="destructive"
             disabled={isLoading}
           >
             {isLoading ? "Reconnecting..." : "Reconnect"} <ExternalLinkIcon className="ml-2 h-4 w-4" />

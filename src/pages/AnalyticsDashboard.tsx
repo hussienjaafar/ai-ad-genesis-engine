@@ -10,6 +10,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { PerformanceMetric } from "@/interfaces/types";
 
 const AnalyticsDashboard = () => {
   const [businessId, setBusinessId] = useState("123"); // In a real app, this would come from context
@@ -25,6 +26,44 @@ const AnalyticsDashboard = () => {
     refetchPerformance();
     refetchInsights();
     toast.success("Refreshing analytics data...");
+  };
+  
+  // Create metric objects that match the PerformanceMetric interface
+  const impressionsMetric: PerformanceMetric = {
+    id: "impressions",
+    name: "Impressions",
+    value: performanceData?.totals.impressions || 0,
+    change: 10,
+    unit: "number",
+    isPositiveGood: true
+  };
+  
+  const clicksMetric: PerformanceMetric = {
+    id: "clicks",
+    name: "Clicks",
+    value: performanceData?.totals.clicks || 0,
+    change: 5,
+    unit: "number",
+    isPositiveGood: true
+  };
+  
+  const ctrMetric: PerformanceMetric = {
+    id: "ctr",
+    name: "CTR",
+    value: (performanceData?.totals.ctr || 0) * 100,
+    change: 2,
+    unit: "percentage",
+    isPositiveGood: true
+  };
+  
+  const spendMetric: PerformanceMetric = {
+    id: "spend",
+    name: "Spend",
+    value: performanceData?.totals.spend || 0,
+    change: -3,
+    unit: "currency",
+    currency: "USD",
+    isPositiveGood: false
   };
   
   return (
@@ -67,30 +106,10 @@ const AnalyticsDashboard = () => {
           ) : (
             <>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <MetricCard 
-                  title="Impressions" 
-                  value={performanceData.totals.impressions.toLocaleString()} 
-                  trend={10}
-                  icon="eye"
-                />
-                <MetricCard 
-                  title="Clicks" 
-                  value={performanceData.totals.clicks.toLocaleString()} 
-                  trend={5}
-                  icon="mouse-pointer"
-                />
-                <MetricCard 
-                  title="CTR" 
-                  value={`${(performanceData.totals.ctr * 100).toFixed(2)}%`}
-                  trend={2}
-                  icon="percent"
-                />
-                <MetricCard 
-                  title="Spend" 
-                  value={`$${performanceData.totals.spend.toFixed(2)}`}
-                  trend={-3}
-                  icon="dollar-sign"
-                />
+                <MetricCard metric={impressionsMetric} />
+                <MetricCard metric={clicksMetric} />
+                <MetricCard metric={ctrMetric} />
+                <MetricCard metric={spendMetric} />
               </div>
               
               <Card>

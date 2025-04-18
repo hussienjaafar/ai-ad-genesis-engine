@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { ExternalLinkIcon, FacebookIcon, GoogleIcon, LinkedinIcon, TwitterIcon, CheckCircleIcon } from "lucide-react";
+import { ExternalLinkIcon, FacebookIcon, ChromeIcon, LinkedinIcon, TwitterIcon, CheckCircleIcon } from "lucide-react";
 import { AdPlatform } from "@/interfaces/types";
 
 interface PlatformConnectorProps {
@@ -48,7 +47,7 @@ const PlatformConnector = ({ onConnected, minimal = false }: PlatformConnectorPr
       case "facebook":
         return <FacebookIcon className="h-6 w-6" />;
       case "google":
-        return <GoogleIcon className="h-6 w-6" />;
+        return <ChromeIcon className="h-6 w-6" />;
       case "linkedin":
         return <LinkedinIcon className="h-6 w-6" />;
       case "tiktok":

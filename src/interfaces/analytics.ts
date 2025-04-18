@@ -1,51 +1,63 @@
 
+import { Types } from 'mongoose';
+
+export interface DailyPerformance {
+  date: string;
+  impressions: number;
+  clicks: number;
+  spend: number;
+  leads: number;
+  ctr: number;
+  cpc: number;
+  cpl: number;
+  conversions?: number;
+}
+
 export interface PerformanceMetrics {
-  dateRange: string;
   kpis: {
     spend: number;
     roas: number;
-    cpl: number;
     ctr: number;
+    cpl: number;
+    cpc?: number;
+    impressions?: number;
+    clicks?: number;
+    conversions?: number;
   };
-  daily: DailyMetric[];
   totals?: {
+    spend: number;
     impressions: number;
     clicks: number;
-    spend: number;
     leads: number;
-    ctr: number;
-    cpl: number;
+    conversions?: number;
   };
-}
-
-export interface DailyMetric {
-  date: string;
-  spend: number;
-  impressions: number;
-  clicks: number;
-  leads: number;
-  ctr: number;
-  cpl: number;
-  roas: number;
-}
-
-export interface InsightData {
-  patternInsights: PatternInsight[];
+  daily: DailyPerformance[];
 }
 
 export interface PatternInsight {
+  _id?: string;
   element: string;
   elementType: string;
   performance: {
-    uplift: number;
     withElement: {
+      impressions: number;
+      clicks: number;
       ctr: number;
       sampleSize: number;
     };
     withoutElement: {
+      impressions: number;
+      clicks: number;
       ctr: number;
       sampleSize: number;
     };
+    uplift: number;
     confidence: number;
   };
+}
+
+export interface InsightData {
+  patternInsights: PatternInsight[];
+  businessId: string;
+  createdAt: string;
 }

@@ -2,9 +2,10 @@
 import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { ArrowDown, ArrowUp } from "lucide-react";
+import { ArrowDown, ArrowUp, Sparkles } from "lucide-react";
 import { PatternInsight } from "@/interfaces/analytics";
 import { Button } from "@/components/ui/button";
+import { GenerateFromInsightModal } from "./GenerateFromInsightModal";
 
 interface TopPatternsTableProps {
   insights: PatternInsight[];
@@ -16,6 +17,8 @@ type SortDirection = "asc" | "desc";
 const TopPatternsTable = ({ insights }: TopPatternsTableProps) => {
   const [sortField, setSortField] = useState<SortField>("uplift");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [selectedInsight, setSelectedInsight] = useState<PatternInsight | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleSort = (field: SortField) => {
     if (field === sortField) {
@@ -24,6 +27,11 @@ const TopPatternsTable = ({ insights }: TopPatternsTableProps) => {
       setSortField(field);
       setSortDirection("desc");
     }
+  };
+
+  const handleGenerateVariation = (insight: PatternInsight) => {
+    setSelectedInsight(insight);
+    setIsModalOpen(true);
   };
 
   const getSortedInsights = () => {
@@ -128,6 +136,7 @@ const TopPatternsTable = ({ insights }: TopPatternsTableProps) => {
                 </Button>
               </TableHead>
               <TableHead>Sample Size</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -141,11 +150,21 @@ const TopPatternsTable = ({ insights }: TopPatternsTableProps) => {
                   <TableCell>
                     {insight.performance.withElement.sampleSize + insight.performance.withoutElement.sampleSize}
                   </TableCell>
+                  <TableCell>
+                    <Button 
+                      onClick={() => handleGenerateVariation(insight)}
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      Generate Variation
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
                   No pattern insights available yet
                 </TableCell>
               </TableRow>
@@ -153,6 +172,14 @@ const TopPatternsTable = ({ insights }: TopPatternsTableProps) => {
           </TableBody>
         </Table>
       </CardContent>
+      
+      {selectedInsight && (
+        <GenerateFromInsightModal
+          insight={selectedInsight}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
     </Card>
   );
 };

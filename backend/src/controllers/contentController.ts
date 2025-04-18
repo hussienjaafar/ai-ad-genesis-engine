@@ -9,6 +9,7 @@ export class ContentController {
    * /api/businesses/{id}/content/generate:
    *   post:
    *     summary: Generate content for a business
+   *     description: Generate new content for a business based on parameters and optionally using insights from analytics
    *     tags: [Content]
    *     security:
    *       - bearerAuth: []
@@ -34,9 +35,21 @@ export class ContentController {
    *                 enum: [facebook, google, videoScript]
    *               params:
    *                 type: object
+   *               sourceInsightId:
+   *                 type: string
+   *                 description: Optional insight ID to base content generation on
    *     responses:
    *       201:
    *         description: Content generated successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 contentId:
+   *                   type: string
+   *                 parsedContent:
+   *                   type: object
    *       400:
    *         description: Bad request
    *       401:
@@ -51,7 +64,7 @@ export class ContentController {
   public static async generateContent(req: Request, res: Response): Promise<Response> {
     try {
       const { id } = req.params;
-      const { contentType, params } = req.body;
+      const { contentType, params, sourceInsightId } = req.body;
 
       if (!Types.ObjectId.isValid(id)) {
         return res.status(400).json({ error: 'Invalid business ID' });
@@ -69,8 +82,13 @@ export class ContentController {
         return res.status(400).json({ error: 'Valid params object is required' });
       }
 
+      // Validate sourceInsightId if provided
+      if (sourceInsightId && !Types.ObjectId.isValid(sourceInsightId)) {
+        return res.status(400).json({ error: 'Invalid insight ID' });
+      }
+
       try {
-        const content = await ContentGenerationService.generateContent(id, contentType, params);
+        const content = await ContentGenerationService.generateContent(id, contentType, params, sourceInsightId);
         return res.status(201).json({
           contentId: content._id,
           parsedContent: content.parsedContent

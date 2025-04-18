@@ -10,6 +10,10 @@ export interface IContent extends Document {
   rawPrompt?: string;
   rawResponse?: string;
   metadata?: Record<string, any>;
+  generatedFrom?: {
+    insightId?: Types.ObjectId;
+    elementText?: string;
+  };
   isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -38,6 +42,13 @@ export interface IContent extends Document {
  *           type: object
  *         status:
  *           type: string
+ *         generatedFrom:
+ *           type: object
+ *           properties:
+ *             insightId:
+ *               type: string
+ *             elementText:
+ *               type: string
  */
 const contentSchema = new Schema<IContent>(
   {
@@ -66,6 +77,13 @@ const contentSchema = new Schema<IContent>(
     rawPrompt: String,
     rawResponse: String,
     metadata: Schema.Types.Mixed,
+    generatedFrom: {
+      insightId: {
+        type: Schema.Types.ObjectId,
+        ref: 'PerformanceInsight',
+      },
+      elementText: String,
+    },
     isDeleted: {
       type: Boolean,
       default: false,

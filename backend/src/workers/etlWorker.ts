@@ -1,4 +1,3 @@
-
 import cron from 'node-cron';
 import { MongoClient, ObjectId } from 'mongodb';
 import axios from 'axios';
@@ -7,6 +6,8 @@ import { OAuth2Client } from 'google-auth-library';
 import { decrypt } from '../lib/crypto';
 import prom from 'prom-client';
 import pLimit from 'p-limit';
+import mongoose from 'mongoose';
+import ContentModel from '../models/Content';
 
 // Alert service import for notification
 import alertService from '../services/alertService';
@@ -218,11 +219,15 @@ async function fetchGoogleAdsReports(refreshToken: string, clientId: string, cli
 /**
  * Process ad performance data into standard format
  */
-function processAdPerformance(data: any[], platform: string, businessId: string, date: string): any[] {
+function processAdPerformance(data: any[], platform: string, businessId: string, date: string, contentMap: Map<string, any>): any[] {
   if (platform === 'facebook') {
     return data.map(item => {
       // Find leads action if exists
       const leadsAction = item.actions?.find((action: any) => action.action_type === 'lead');
+      
+      // Check if this ad has associated content with insight
+      const contentInfo = contentMap.get(item.ad_id);
+      const generatedFromInsightId = contentInfo?.generatedFromInsightId;
       
       return {
         businessId,
@@ -234,13 +239,45 @@ function processAdPerformance(data: any[], platform: string, businessId: string,
           clicks: parseInt(item.clicks) || 0,
           spend: parseFloat(item.spend) || 0,
           leads: leadsAction ? parseInt(leadsAction.value) : 0
-        }
+        },
+        // Add the insight ID if available
+        generatedFromInsightId: generatedFromInsightId || null,
+        contentId: contentInfo?.contentId || null
       };
     });
   }
   
   // Placeholder for Google Ads data processing
   return [];
+}
+
+/**
+ * Get content to ad mappings, including insight source information
+ */
+async function getContentAdMappings(businessId: string): Promise<Map<string, any>> {
+  try {
+    // Make sure we use mongoose connection rather than new MongoClient
+    const contentItems = await ContentModel.find({ 
+      businessId: new mongoose.Types.ObjectId(businessId),
+      'metadata.adId': { $exists: true }
+    }).lean();
+    
+    const contentMap = new Map();
+    
+    for (const content of contentItems) {
+      if (content.metadata?.adId) {
+        contentMap.set(content.metadata.adId, {
+          contentId: content._id.toString(),
+          generatedFromInsightId: content.generatedFrom?.insightId?.toString() || null
+        });
+      }
+    }
+    
+    return contentMap;
+  } catch (error) {
+    console.error('Error getting content-ad mappings:', error);
+    return new Map();
+  }
 }
 
 /**
@@ -278,6 +315,9 @@ async function runEtl() {
       const businessId = business._id.toString();
       const allPerformanceData = [];
       
+      // Get content to ad mappings for this business to attach insight IDs
+      const contentAdMap = await getContentAdMappings(businessId);
+      
       // Process Meta/Facebook data if connected
       if (business.integrations?.adPlatforms?.facebook?.isConnected && 
           !business.integrations?.adPlatforms?.facebook?.needsReauth) {
@@ -289,7 +329,7 @@ async function runEtl() {
           const accountId = business.integrations.adPlatforms.facebook.accountId;
           
           const insights = await fetchMetaInsights(token, accountId, yesterdayStr, businessId);
-          const processedData = processAdPerformance(insights, 'facebook', businessId, yesterdayStr);
+          const processedData = processAdPerformance(insights, 'facebook', businessId, yesterdayStr, contentAdMap);
           
           allPerformanceData.push(...processedData);
           
@@ -329,7 +369,7 @@ async function runEtl() {
             businessId
           );
           
-          const processedData = processAdPerformance(googleReports, 'google', businessId, yesterdayStr);
+          const processedData = processAdPerformance(googleReports, 'google', businessId, yesterdayStr, contentAdMap);
           allPerformanceData.push(...processedData);
           
           // Update last synced timestamp

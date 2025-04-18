@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 interface ContentGenerationParams {
   contentType: 'facebook' | 'google' | 'videoScript';
   params: Record<string, any>;
+  sourceInsightId?: string;
 }
 
 interface GeneratedContent {
@@ -35,6 +36,7 @@ export function useContentGeneration(businessId: string) {
         const response = await api.get(`/businesses/${businessId}/content`, { params });
         return response.data;
       },
+      staleTime: 5 * 60_000, // 5 minutes
     });
   };
 
@@ -46,6 +48,7 @@ export function useContentGeneration(businessId: string) {
         return response.data;
       },
       enabled: !!contentId,
+      staleTime: 5 * 60_000, // 5 minutes
     });
   };
 

@@ -15,6 +15,17 @@ The Analytics Dashboard provides comprehensive metrics and insights for your adv
 
 **Note:** Charts display once at least one day of performance data is ingested.
 
+## Insight-Driven Generation
+
+Our platform identifies winning elements from your existing ads and helps you leverage them for new content:
+
+1. The Analytics Dashboard automatically identifies high-performing patterns in your ad content
+2. Click "Generate Variation" on any insight to create new content based on that winning element
+3. Choose the content type (Facebook, Google, Video) and customize as needed
+4. New content is tagged with the source insight for performance tracking
+
+This data-driven approach helps improve your marketing ROI by learning from past successes.
+
 ## How can I edit this code?
 
 There are several ways of editing your application.

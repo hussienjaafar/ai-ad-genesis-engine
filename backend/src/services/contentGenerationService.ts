@@ -4,12 +4,14 @@ import ContentModel, { IContent } from '../models/Content';
 import BusinessModel from '../models/Business';
 import AIPromptEngine from './aiPromptEngine';
 import AIProvider from './aiProvider';
+import InsightService from './insightService';
 
 export class ContentGenerationService {
   public static async generateContent(
     businessId: string,
     contentType: string,
-    params: Record<string, any>
+    params: Record<string, any>,
+    sourceInsightId?: string
   ): Promise<IContent> {
     if (!Types.ObjectId.isValid(businessId)) {
       throw new Error('Invalid business ID');
@@ -21,9 +23,24 @@ export class ContentGenerationService {
       throw new Error('Business not found');
     }
 
+    // Check if source insight was provided
+    let elementText = null;
+    if (sourceInsightId) {
+      if (!Types.ObjectId.isValid(sourceInsightId)) {
+        throw new Error('Invalid source insight ID');
+      }
+      
+      try {
+        elementText = await InsightService.getElementSnippet(sourceInsightId);
+      } catch (error) {
+        console.error('Error getting insight element:', error);
+        // Continue without the insight element
+      }
+    }
+
     // Build system and user prompts
     const systemPrompt = AIPromptEngine.buildSystemPrompt(business, contentType);
-    const userPrompt = this.buildUserPrompt(contentType, params);
+    const userPrompt = this.buildUserPrompt(contentType, params, elementText);
 
     try {
       // Generate content using AI provider
@@ -47,6 +64,14 @@ export class ContentGenerationService {
         },
       });
 
+      // Add generatedFrom data if sourceInsightId was provided
+      if (sourceInsightId && elementText) {
+        content.generatedFrom = {
+          insightId: new Types.ObjectId(sourceInsightId),
+          elementText
+        };
+      }
+
       return content.save();
     } catch (error: any) {
       if (error.message.includes('token limit')) {
@@ -56,7 +81,11 @@ export class ContentGenerationService {
     }
   }
 
-  private static buildUserPrompt(contentType: string, params: Record<string, any>): string {
+  private static buildUserPrompt(
+    contentType: string, 
+    params: Record<string, any>,
+    insightElement?: string | null
+  ): string {
     const formattedParams = {
       ...params,
       contentType,
@@ -73,6 +102,14 @@ Requirements and Parameters:
         prompt += `- ${key.charAt(0).toUpperCase() + key.slice(1)}: ${value}\n`;
       }
     });
+
+    // Add high-performing element if provided
+    if (insightElement) {
+      prompt += `\nBased on our analytics, the following element performs well with our audience:
+"${insightElement}"
+
+Please incorporate the essence or style of this high-performing element into the new content.`;
+    }
 
     // Add specific instructions based on content type
     switch (contentType) {

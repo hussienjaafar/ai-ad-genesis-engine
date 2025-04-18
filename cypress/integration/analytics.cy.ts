@@ -15,6 +15,7 @@ describe("Analytics Dashboard", () => {
     // Mock performance metrics API
     cy.intercept("GET", "/api/businesses/*/analytics/performance*", {
       statusCode: 200,
+      fixture: "performanceMetrics.json", // Create a fixture file with mock data
       body: {
         dateRange: "2025-04-01 – 2025-04-30",
         kpis: {
@@ -34,14 +35,32 @@ describe("Analytics Dashboard", () => {
             cpl: 24.09,
             roas: 3.1
           },
-          // Additional data points...
-        ]
+          { 
+            date: "2025-04-02",
+            spend: 130.50,
+            impressions: 11000,
+            clicks: 130,
+            leads: 6,
+            ctr: 1.18,
+            cpl: 21.75,
+            roas: 3.2
+          }
+        ],
+        totals: {
+          impressions: 21000,
+          clicks: 250,
+          spend: 250.95,
+          leads: 11,
+          ctr: 1.19,
+          cpl: 22.81
+        }
       }
-    });
+    }).as("getPerformanceMetrics");
 
     // Mock insights API
     cy.intercept("GET", "/api/businesses/*/analytics/insights", {
       statusCode: 200,
+      fixture: "insights.json", // Create a fixture file with mock data
       body: {
         patternInsights: [
           {
@@ -60,12 +79,28 @@ describe("Analytics Dashboard", () => {
               confidence: 0.92
             }
           },
-          // Additional insights...
+          {
+            element: "Product image",
+            elementType: "visual",
+            performance: {
+              uplift: 0.18,
+              withElement: {
+                ctr: 0.017,
+                sampleSize: 140
+              },
+              withoutElement: {
+                ctr: 0.014,
+                sampleSize: 130
+              },
+              confidence: 0.88
+            }
+          }
         ]
       }
-    });
+    }).as("getInsights");
 
     cy.visit("/analytics");
+    cy.wait(["@getPerformanceMetrics", "@getInsights"]);
   });
 
   it("renders the KPI cards with correct values", () => {
@@ -107,7 +142,15 @@ describe("Analytics Dashboard", () => {
         },
         daily: [
           // 7 days of data...
-        ]
+        ],
+        totals: {
+          impressions: 7000,
+          clicks: 90,
+          spend: 90.45,
+          leads: 3,
+          ctr: 1.29,
+          cpl: 30.15
+        }
       }
     }).as("get7DayData");
     
@@ -115,5 +158,35 @@ describe("Analytics Dashboard", () => {
     cy.wait("@get7DayData");
     
     cy.url().should("include", "days=7");
+  });
+  
+  it("handles empty data gracefully", () => {
+    cy.intercept("GET", "/api/businesses/*/analytics/performance?days=90*", {
+      statusCode: 200,
+      body: {
+        dateRange: "2025-01-30 – 2025-04-30",
+        kpis: {
+          spend: 0,
+          roas: 0,
+          cpl: 0,
+          ctr: 0
+        },
+        daily: [],
+        totals: {
+          impressions: 0,
+          clicks: 0,
+          spend: 0,
+          leads: 0,
+          ctr: 0,
+          cpl: 0
+        }
+      }
+    }).as("getEmptyData");
+    
+    cy.contains("90 Days").click();
+    cy.wait("@getEmptyData");
+    
+    cy.contains("No performance data available yet").should("exist");
+    cy.contains("Charts will display once at least one day of performance data is ingested").should("exist");
   });
 });

@@ -1,8 +1,19 @@
+
 # Welcome to your Lovable project
 
 ## Project info
 
 **URL**: https://lovable.dev/projects/b6b9f7f6-d756-4f72-afe8-a43c50fd2299
+
+## Analytics Dashboard
+
+The Analytics Dashboard provides comprehensive metrics and insights for your advertising campaigns:
+
+- View key performance indicators like Spend, ROAS, CPL, and CTR
+- Analyze trends with interactive charts
+- Discover pattern insights to optimize your ads
+
+**Note:** Charts display once at least one day of performance data is ingested.
 
 ## How can I edit this code?
 

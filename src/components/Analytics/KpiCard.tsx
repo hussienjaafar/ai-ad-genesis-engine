@@ -18,7 +18,7 @@ const KpiCard = ({ title, value, change, unit, currency = "USD", isPositiveGood 
   
   const formatValue = (value: number, unit: string, currency?: string) => {
     if (unit === "currency" && currency) {
-      return new Intl.NumberFormat("en-US", { 
+      return new Intl.NumberFormat(undefined, { 
         style: "currency", 
         currency,
         maximumFractionDigits: 2 

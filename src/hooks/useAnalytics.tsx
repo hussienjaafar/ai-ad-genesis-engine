@@ -14,7 +14,8 @@ export const usePerformanceMetrics = (businessId: string, days: number = 30) => 
       return response.data;
     },
     enabled: !!businessId,
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60_000 // 5 minutes
   });
 };
 
@@ -29,6 +30,7 @@ export const usePerformanceInsights = (businessId: string) => {
       return response.data;
     },
     enabled: !!businessId,
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60_000 // 5 minutes
   });
 };

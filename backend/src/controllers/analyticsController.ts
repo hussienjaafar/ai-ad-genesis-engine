@@ -1,6 +1,8 @@
 
 import { Request, Response } from 'express';
-import { MongoClient, ObjectId } from 'mongodb';
+import { Types } from 'mongoose';
+import PerformanceInsightModel from '../models/PerformanceInsight';
+import { connectToDatabase } from '../lib/mongoose';
 
 export class AnalyticsController {
   /**
@@ -16,10 +18,10 @@ export class AnalyticsController {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
       
-      const client = new MongoClient(process.env.MONGODB_URI as string);
-      await client.connect();
+      await connectToDatabase();
       
-      const db = client.db();
+      // Aggregate metrics using the mongoose connection
+      const db = mongoose.connection.db;
       const performanceCollection = db.collection('performanceData');
       
       // Aggregate metrics
@@ -82,8 +84,6 @@ export class AnalyticsController {
       totals['ctr'] = totals.impressions > 0 ? totals.clicks / totals.impressions : 0;
       totals['cpl'] = totals.leads > 0 ? totals.spend / totals.leads : 0;
       
-      await client.close();
-      
       res.status(200).json({
         data: transformedData,
         totals,
@@ -107,20 +107,20 @@ export class AnalyticsController {
     try {
       const businessId = req.params.id;
       
-      const client = new MongoClient(process.env.MONGODB_URI as string);
-      await client.connect();
+      await connectToDatabase();
       
-      const db = client.db();
-      const insightsCollection = db.collection('performanceInsights');
-      
-      // Get latest insights
-      const insights = await insightsCollection
-        .findOne({ businessId }, { sort: { createdAt: -1 } });
-      
-      await client.close();
+      // Get latest insights using the PerformanceInsight model
+      const insights = await PerformanceInsightModel
+        .findOne({ businessId: new Types.ObjectId(businessId) }, { sort: { createdAt: -1 } })
+        .lean();
       
       if (!insights) {
         return res.status(404).json({ error: 'No insights available for this business' });
+      }
+      
+      // Sort patternInsights by uplift in descending order
+      if (insights.patternInsights) {
+        insights.patternInsights.sort((a, b) => b.performance?.uplift - a.performance?.uplift);
       }
       
       res.status(200).json(insights);

@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import KpiCard from "@/components/Analytics/KpiCard";
 import PerformanceChart from "@/components/Analytics/PerformanceChart";
 import TopPatternsTable from "@/components/Analytics/TopPatternsTable";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const AnalyticsDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -158,16 +159,26 @@ const AnalyticsDashboard = () => {
             </TabsList>
             
             <TabsContent value="performance" className="space-y-6">
-              <PerformanceChart 
-                data={performanceData.daily} 
-                days={timeframe} 
-              />
+              {performanceData.daily && performanceData.daily.length > 0 ? (
+                <PerformanceChart 
+                  data={performanceData.daily} 
+                  days={timeframe} 
+                />
+              ) : (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-16">
+                    <p className="text-muted-foreground mb-4">No performance data available yet</p>
+                    <p className="text-sm text-muted-foreground">Charts will display once at least one day of performance data is ingested.</p>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
             
             <TabsContent value="patterns" className="space-y-6">
               {isLoadingInsights && !insightsData ? (
-                <div className="flex justify-center py-10">
-                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <div className="flex flex-col space-y-4">
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-64 w-full" />
                 </div>
               ) : insightsError ? (
                 <Card>

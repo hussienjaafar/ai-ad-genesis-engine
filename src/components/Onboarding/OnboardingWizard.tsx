@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -8,6 +7,7 @@ import { toast } from "sonner";
 import { Industry } from "@/interfaces/types";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useBusinesses } from "@/hooks/useBusinesses";
 
 const steps = [
   { name: "Industry", description: "Select your business industry" },
@@ -19,6 +19,7 @@ const OnboardingWizard = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedIndustry, setSelectedIndustry] = useState<Industry>("ecommerce");
   const navigate = useNavigate();
+  const { createBusiness } = useBusinesses();
 
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
@@ -34,8 +35,18 @@ const OnboardingWizard = () => {
     }
   };
 
-  const handleIndustrySelect = (industry: Industry) => {
+  const handleIndustrySelect = async (industry: Industry, businessName: string) => {
     setSelectedIndustry(industry);
+    
+    await createBusiness({
+      name: businessName,
+      businessType: industry,
+      contact: {
+        email: 'user@example.com',
+      },
+    });
+    
+    nextStep();
   };
 
   const completeOnboarding = () => {

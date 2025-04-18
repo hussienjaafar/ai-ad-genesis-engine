@@ -7,6 +7,7 @@ import oauthRoutes from './oauth';
 import analyticsRoutes from './analytics';
 import experimentRoutes from './experiments';
 import agencyRoutes from './agency';
+import billingRoutes from './billing';
 
 const router = express.Router();
 
@@ -17,5 +18,6 @@ router.use('/oauth', oauthRoutes);
 router.use('/', analyticsRoutes);
 router.use('/', experimentRoutes);
 router.use('/agencies', agencyRoutes);
+router.use('/billing', billingRoutes);
 
 export default router;

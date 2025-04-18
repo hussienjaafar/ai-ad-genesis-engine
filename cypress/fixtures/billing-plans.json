@@ -1,0 +1,24 @@
+
+[
+  {
+    "id": "price_basic",
+    "name": "Basic Plan",
+    "description": "For small businesses",
+    "price": 49,
+    "tokens": 500000
+  },
+  {
+    "id": "price_pro",
+    "name": "Pro Plan",
+    "description": "For growing businesses",
+    "price": 99,
+    "tokens": 1500000
+  },
+  {
+    "id": "price_enterprise",
+    "name": "Enterprise Plan",
+    "description": "For large businesses",
+    "price": 299,
+    "tokens": 5000000
+  }
+]

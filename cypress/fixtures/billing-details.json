@@ -1,0 +1,16 @@
+
+{
+  "usage": {
+    "currentUsage": 45000,
+    "quota": 100000,
+    "percentUsed": 45
+  },
+  "subscription": {
+    "status": "active",
+    "planId": "price_basic",
+    "planName": "Basic Plan",
+    "billingStatus": "active",
+    "currentPeriodEnd": 1719792000,
+    "cancelAtPeriodEnd": false
+  }
+}

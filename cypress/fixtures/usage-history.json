@@ -1,0 +1,30 @@
+
+[
+  {
+    "_id": "usage1",
+    "businessId": "b123",
+    "date": "2025-03-18T00:00:00.000Z",
+    "tokensRequested": 2500,
+    "tokensConsumed": 1200,
+    "createdAt": "2025-03-18T12:30:00.000Z",
+    "updatedAt": "2025-03-18T16:45:00.000Z"
+  },
+  {
+    "_id": "usage2",
+    "businessId": "b123",
+    "date": "2025-03-17T00:00:00.000Z",
+    "tokensRequested": 3800,
+    "tokensConsumed": 1800,
+    "createdAt": "2025-03-17T10:15:00.000Z",
+    "updatedAt": "2025-03-17T18:20:00.000Z"
+  },
+  {
+    "_id": "usage3",
+    "businessId": "b123",
+    "date": "2025-03-16T00:00:00.000Z",
+    "tokensRequested": 5200,
+    "tokensConsumed": 2500,
+    "createdAt": "2025-03-16T09:45:00.000Z",
+    "updatedAt": "2025-03-16T17:30:00.000Z"
+  }
+]

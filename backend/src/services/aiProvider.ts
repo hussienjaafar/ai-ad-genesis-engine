@@ -1,5 +1,6 @@
 
 import axios from 'axios';
+import UsageService from './usageService';
 
 export class AIProvider {
   private apiKey: string;
@@ -16,12 +17,20 @@ export class AIProvider {
     }
   }
 
-  async generateCompletion(systemPrompt: string, userPrompt: string): Promise<string> {
+  async generateCompletion(systemPrompt: string, userPrompt: string, businessId?: string): Promise<string> {
     try {
       const totalPromptTokens = this.estimateTokenCount(systemPrompt + userPrompt);
       
       if (totalPromptTokens > this.maxTokens) {
         throw new Error(`Prompt exceeds token limit of ${this.maxTokens}`);
+      }
+
+      // If businessId is provided, check quota before proceeding
+      if (businessId) {
+        const quotaCheck = await UsageService.checkQuota(businessId);
+        if (!quotaCheck.hasQuota) {
+          throw new Error('Monthly token quota exceeded. Please upgrade your plan to continue.');
+        }
       }
 
       const response = await axios.post(
@@ -42,11 +51,31 @@ export class AIProvider {
         }
       );
 
-      return response.data.choices[0].message.content;
+      const completionText = response.data.choices[0].message.content;
+      const completionTokens = this.estimateTokenCount(completionText);
+
+      // Record token usage if businessId is provided
+      if (businessId) {
+        await UsageService.recordUsage(
+          businessId,
+          totalPromptTokens,
+          completionTokens
+        );
+      }
+
+      return completionText;
     } catch (error: any) {
       if (error.response?.status === 413 || error.message.includes('token limit')) {
         throw new Error('Prompt exceeds token limit');
       }
+      
+      // Check if it's a quota error and format accordingly
+      if (error.message.includes('quota exceeded')) {
+        const quotaError = new Error('Monthly token quota exceeded');
+        (quotaError as any).status = 429; // Too Many Requests
+        throw quotaError;
+      }
+      
       throw new Error(`AI generation failed: ${error.message}`);
     }
   }

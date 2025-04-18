@@ -17,6 +17,8 @@ import Experiments from "./pages/Experiments";
 import ExperimentResults from "./pages/ExperimentResults";
 import Agencies from "./pages/Agencies";
 import AgencyOverview from "./pages/AgencyOverview";
+import Billing from "./pages/Billing";
+import GenerateContent from "./pages/GenerateContent";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,6 +37,8 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/businesses" element={<Businesses />} />
         <Route path="/businesses/:id" element={<BusinessDetails />} />
+        <Route path="/businesses/:id/billing" element={<Billing />} />
+        <Route path="/businesses/:id/generate" element={<GenerateContent />} />
         <Route path="/oauth/:platform/callback" element={<OAuthCallback />} />
         <Route path="/content/:businessId" element={<Content />} />
         <Route path="/analytics" element={<AnalyticsDashboard />} />

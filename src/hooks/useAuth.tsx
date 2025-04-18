@@ -12,7 +12,6 @@ interface User {
 
 interface AuthResponse {
   accessToken: string;
-  refreshToken: string;
   user: User;
 }
 
@@ -39,7 +38,6 @@ export function useAuth() {
     },
     onSuccess: (data) => {
       localStorage.setItem('accessToken', data.accessToken);
-      localStorage.setItem('refreshToken', data.refreshToken);
       queryClient.setQueryData(['auth', 'me'], data.user);
       toast.success('Successfully logged in');
       navigate('/');
@@ -53,18 +51,20 @@ export function useAuth() {
     },
     onSuccess: (data) => {
       localStorage.setItem('accessToken', data.accessToken);
-      localStorage.setItem('refreshToken', data.refreshToken);
       queryClient.setQueryData(['auth', 'me'], data.user);
       toast.success('Successfully registered');
       navigate('/onboarding');
     },
   });
 
-  const logout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    queryClient.setQueryData(['auth', 'me'], null);
-    navigate('/login');
+  const logout = async () => {
+    try {
+      await api.post('/auth/logout');
+    } finally {
+      localStorage.removeItem('accessToken');
+      queryClient.setQueryData(['auth', 'me'], null);
+      navigate('/login');
+    }
   };
 
   return {

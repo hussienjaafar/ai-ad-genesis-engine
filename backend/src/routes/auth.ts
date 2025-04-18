@@ -1,7 +1,7 @@
 
 import express from 'express';
 import { rateLimit } from 'express-rate-limit';
-import AuthController from '../controllers/authController';
+import { AuthController } from '../controllers/auth';
 import authorize from '../middleware/auth';
 
 const router = express.Router();

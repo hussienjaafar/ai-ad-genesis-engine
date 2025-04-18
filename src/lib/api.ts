@@ -25,7 +25,6 @@ const processQueue = (error: any = null) => {
   failedQueue = [];
 };
 
-// Add request interceptor to attach JWT
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('accessToken');
@@ -37,7 +36,6 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Add response interceptor for token refresh
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -46,7 +44,6 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         try {
-          // Wait for the other refresh request
           await new Promise<void>((resolve, reject) => {
             failedQueue.push({ resolve, reject });
           });
@@ -64,8 +61,6 @@ api.interceptors.response.use(
         const { accessToken } = response.data;
         
         localStorage.setItem('accessToken', accessToken);
-        
-        // Update header for retry
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         
         processQueue();
@@ -80,7 +75,6 @@ api.interceptors.response.use(
       }
     }
 
-    // Show error toast for non-auth errors
     if (error.response?.data?.error) {
       toast.error(error.response.data.error);
     }

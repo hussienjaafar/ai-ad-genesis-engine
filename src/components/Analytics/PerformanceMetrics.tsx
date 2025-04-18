@@ -3,11 +3,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import MetricCard from "@/components/Common/MetricCard";
 import { PerformanceMetric } from "@/interfaces/types";
+import { PerformanceMetrics as IPerformanceMetrics } from "@/interfaces/analytics";
 
 interface PerformanceMetricsProps {
   isLoading: boolean;
   error: any;
-  performanceData: any;
+  performanceData: IPerformanceMetrics | null;
 }
 
 const PerformanceMetrics = ({ isLoading, error, performanceData }: PerformanceMetricsProps) => {

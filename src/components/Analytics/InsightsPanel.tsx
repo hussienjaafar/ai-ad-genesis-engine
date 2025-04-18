@@ -1,11 +1,12 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import { InsightData } from "@/interfaces/analytics";
 
 interface InsightsPanelProps {
   isLoading: boolean;
   error: any;
-  insightsData: any;
+  insightsData: InsightData | null;
 }
 
 const InsightsPanel = ({ isLoading, error, insightsData }: InsightsPanelProps) => {

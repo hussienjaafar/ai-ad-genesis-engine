@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import api from '@/lib/api';
@@ -7,6 +8,7 @@ import { useAccessToken } from './useAccessToken';
 interface User {
   id: string;
   email: string;
+  name?: string;
   role: 'admin' | 'client' | 'staff';
 }
 

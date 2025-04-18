@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -23,24 +24,20 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <QueryClientProvider client={queryClient}>
-          <Routes>
-            <Route path="/register" element={<Register />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={<Home />} />
-            <Route path="/businesses" element={<Businesses />} />
-            <Route path="/businesses/:id" element={<BusinessDetails />} />
-            <Route path="/oauth/:platform/callback" element={<OAuthCallback />} />
-            <Route path="/content/:businessId" element={<Content />} />
-            <Route path="/analytics" element={<AnalyticsDashboard />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <Toaster position="top-right" />
-        </QueryClientProvider>
-      </AuthProvider>
-    </BrowserRouter>
+    <AuthProvider>
+      <Routes>
+        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/businesses" element={<Businesses />} />
+        <Route path="/businesses/:id" element={<BusinessDetails />} />
+        <Route path="/oauth/:platform/callback" element={<OAuthCallback />} />
+        <Route path="/content/:businessId" element={<Content />} />
+        <Route path="/analytics" element={<AnalyticsDashboard />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <Toaster position="top-right" />
+    </AuthProvider>
   );
 }
 

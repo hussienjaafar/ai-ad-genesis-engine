@@ -1,3 +1,4 @@
+
 import {
   LayoutDashboard,
   Settings,
@@ -11,9 +12,13 @@ import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 
-export default function Sidebar() {
+interface SidebarProps {
+  isOnboarded?: boolean;
+}
+
+export default function Sidebar({ isOnboarded = true }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -99,8 +104,8 @@ export default function Sidebar() {
                 <AvatarFallback>CN</AvatarFallback>
               </Avatar>
               <div className="flex flex-col text-left">
-                <span className="text-sm font-medium leading-none">{user?.name}</span>
-                <span className="text-xs text-gray-500">{user?.email}</span>
+                <span className="text-sm font-medium leading-none">{user?.name || 'User'}</span>
+                <span className="text-xs text-gray-500">{user?.email || 'user@example.com'}</span>
               </div>
             </Button>
           </DropdownMenuTrigger>

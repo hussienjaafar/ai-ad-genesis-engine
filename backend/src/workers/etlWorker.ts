@@ -1,4 +1,5 @@
-import cron from 'node-cron';
+
+import { patternQueue, etlQueue } from '../queues/etlQueue';
 import { MongoClient, ObjectId } from 'mongodb';
 import axios from 'axios';
 import { google } from 'googleapis';
@@ -10,6 +11,7 @@ import mongoose from 'mongoose';
 import ContentModel from '../models/Content';
 import ExperimentModel from '../models/Experiment';
 import experimentService from '../services/experimentService';
+import crypto from 'crypto';
 
 // Alert service import for notification
 import alertService from '../services/alertService';
@@ -137,9 +139,9 @@ async function requestWithRetry<T>(fn: () => Promise<T>, retries = 5, platform: 
 /**
  * Fetch Meta Ads insights with pagination support
  */
-async function fetchMetaInsights(token: string, accountId: string, yesterday: string, businessId: string): Promise<any[]> {
+export async function fetchMetaInsights(token: string, accountId: string, yesterday: string, businessId: string): Promise<any[]> {
   let allResults: any[] = [];
-  let nextPageUrl = `https://graph.facebook.com/v17.0/act_${accountId}/insights?access_token=${token}&fields=ad_id,impressions,clicks,spend,inline_link_clicks,actions&level=ad&time_range={"since":"${yesterday}","until":"${yesterday}"}`;
+  let nextPageUrl = `https://graph.facebook.com/v17.0/act_${accountId}/insights?access_token=${token}&fields=ad_id,impressions,clicks,spend,inline_link_clicks,actions,device_platform&level=ad&time_range={"since":"${yesterday}","until":"${yesterday}"}`;
   
   const businessLimiter = getBusinessLimiter(businessId);
   
@@ -241,6 +243,12 @@ function processAdPerformance(data: any[], platform: string, businessId: string,
         };
       }
       
+      // Extract device information
+      const device = item.device_platform || 'unknown';
+      
+      // Extract audience segment (if available in future)
+      const audienceSegment = item.audience_segment || 'all';
+      
       return {
         businessId,
         platform,
@@ -257,7 +265,10 @@ function processAdPerformance(data: any[], platform: string, businessId: string,
         contentId: contentId || null,
         // Add experiment data if available
         experimentId: experimentInfo?.experimentId || null,
-        variant: experimentInfo?.variant || null
+        variant: experimentInfo?.variant || null,
+        // Add segmentation data
+        device,
+        audienceSegment
       };
     });
   }
@@ -358,7 +369,7 @@ async function updateExperimentResults() {
 /**
  * Main ETL function to extract, transform and load ad performance data
  */
-async function runEtl() {
+export async function runEtl() {
   console.log('Starting ETL job...');
   etlJobsTotal.inc();
   
@@ -486,25 +497,26 @@ async function runEtl() {
     // After ETL job completes, update experiment results
     await updateExperimentResults();
     
+    // After ETL job, enqueue pattern analysis jobs
+    await patternQueue.add('trigger-pattern-analysis', {}, { 
+      removeOnComplete: true,
+    });
+    
     console.log('ETL job completed successfully');
   } catch (error) {
     console.error('ETL job failed:', error);
   }
 }
 
-/**
- * Start the ETL cron job
- */
-export function startEtlJob() {
-  const cronSchedule = process.env.CRON_ETL_SCHEDULE || '0 3 * * *'; // Default to 3 AM daily
-  console.log(`Setting up ETL cron job with schedule: ${cronSchedule}`);
-  
-  cron.schedule(cronSchedule, runEtl);
-}
+// No longer needed as we're using BullMQ for scheduling
+// export function startEtlJob() {
+//   // This has been replaced by the BullMQ scheduler
+// }
 
-/**
- * Run ETL job manually
- */
+// This function is now used to manually trigger the ETL job
 export function runEtlManually() {
-  return runEtl();
+  return etlQueue.add('etl-manual', {}, { 
+    priority: 1,
+    removeOnComplete: true
+  });
 }

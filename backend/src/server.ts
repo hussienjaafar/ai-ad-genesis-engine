@@ -13,6 +13,7 @@ import apiRoutes from './routes';
 import setupSwagger from './lib/swagger';
 import { startTokenRefreshJob } from './jobs/tokenRefreshJob';
 import { startTokenMonitorJob } from './jobs/tokenMonitorJob';
+import { scheduleEtlJob, setupEtlWorker, setupPatternWorker } from './queues/etlQueue';
 
 // Validate encryption key
 if (process.env.NODE_ENV === 'production' && (!process.env.OAUTH_ENCRYPTION_KEY || process.env.OAUTH_ENCRYPTION_KEY.length !== 32)) {
@@ -78,6 +79,15 @@ if (process.env.NODE_ENV !== 'test') {
       
       // Start token expiry monitor job
       startTokenMonitorJob();
+      
+      // Initialize BullMQ workers
+      const etlWorker = setupEtlWorker();
+      const patternWorker = setupPatternWorker();
+      
+      // Schedule ETL job
+      await scheduleEtlJob();
+      
+      console.log('BullMQ workers and schedulers initialized');
       
       app.listen(port, () => {
         console.log(`Server running on port ${port}`);

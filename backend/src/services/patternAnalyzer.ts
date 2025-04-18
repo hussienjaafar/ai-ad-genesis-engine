@@ -1,5 +1,8 @@
 
 import { MongoClient, ObjectId } from 'mongodb';
+import { patternQueue } from '../queues/etlQueue';
+import { calculateChiSquare, getPValue } from '../queues/patternJobProcessor';
+import * as ss from 'simple-statistics';
 
 interface PerformanceData {
   businessId: string;
@@ -12,6 +15,9 @@ interface PerformanceData {
     spend: number;
     leads: number;
   };
+  // New fields for segmentation
+  device?: string;
+  audienceSegment?: string;
 }
 
 interface ContentElement {
@@ -49,41 +55,11 @@ interface PatternInsight {
     };
     uplift: number;
     confidence: number;
+    confidenceInterval?: {
+      lower: number;
+      upper: number;
+    };
   };
-}
-
-/**
- * Calculate chi-square statistic for a contingency table
- */
-function calculateChiSquare(table: number[][]): number {
-  // Expected values calculation
-  const rowSums = table.map(row => row.reduce((sum, cell) => sum + cell, 0));
-  const colSums = [0, 0];
-  for (let i = 0; i < table.length; i++) {
-    colSums[0] += table[i][0];
-    colSums[1] += table[i][1];
-  }
-  const total = rowSums.reduce((sum, val) => sum + val, 0);
-  
-  let chiSquare = 0;
-  for (let i = 0; i < table.length; i++) {
-    for (let j = 0; j < table[i].length; j++) {
-      const expected = (rowSums[i] * colSums[j]) / total;
-      if (expected > 0) {
-        chiSquare += Math.pow(table[i][j] - expected, 2) / expected;
-      }
-    }
-  }
-  
-  return chiSquare;
-}
-
-/**
- * Get p-value from chi-square statistic (1 degree of freedom)
- */
-function getPValue(chiSquare: number): number {
-  // This is an approximation for 1 degree of freedom
-  return 1 - Math.exp(-0.5 * chiSquare);
 }
 
 /**
@@ -176,7 +152,7 @@ export async function analyzePatterns(businessId: string): Promise<PatternInsigh
       // Only consider elements with at least 15% uplift
       if (uplift < 0.15) continue;
       
-      // Calculate statistical significance
+      // Calculate statistical significance using improved methods
       const contingencyTable = [
         [withClicks, withImpressions - withClicks],
         [withoutClicks, withoutImpressions - withoutClicks]
@@ -185,6 +161,12 @@ export async function analyzePatterns(businessId: string): Promise<PatternInsigh
       const chiSquare = calculateChiSquare(contingencyTable);
       const pValue = getPValue(chiSquare);
       const confidenceLevel = 1 - pValue;
+      
+      // Calculate confidence interval for uplift (95%)
+      const confidenceInterval = {
+        lower: ss.quantile(uplift - 1.96 * Math.sqrt((1/withImpressions) + (1/withoutImpressions)), 0.025),
+        upper: ss.quantile(uplift + 1.96 * Math.sqrt((1/withImpressions) + (1/withoutImpressions)), 0.975)
+      };
       
       // Only consider results with p < 0.05 (95% confidence)
       if (pValue >= 0.05) continue;
@@ -206,7 +188,8 @@ export async function analyzePatterns(businessId: string): Promise<PatternInsigh
             sampleSize: Object.keys(adPerformance).length - adsWithElement.size
           },
           uplift,
-          confidence: confidenceLevel
+          confidence: confidenceLevel,
+          confidenceInterval
         }
       });
     }
@@ -241,9 +224,9 @@ export async function analyzePatterns(businessId: string): Promise<PatternInsigh
 }
 
 /**
- * Run pattern analysis after ETL completion
+ * Enqueue pattern analysis jobs for all businesses
  */
-export async function runPatternAnalysis(): Promise<void> {
+export async function enqueuePatternAnalysisJobs(): Promise<void> {
   const client = new MongoClient(process.env.MONGODB_URI as string);
   await client.connect();
   
@@ -259,15 +242,22 @@ export async function runPatternAnalysis(): Promise<void> {
       ]
     }).toArray();
     
-    console.log(`Running pattern analysis for ${businesses.length} businesses`);
+    console.log(`Enqueuing pattern analysis for ${businesses.length} businesses`);
     
+    // Enqueue a job for each business
     for (const business of businesses) {
-      try {
-        await analyzePatterns(business._id.toString());
-        console.log(`Completed pattern analysis for business ${business._id}`);
-      } catch (error) {
-        console.error(`Error analyzing patterns for business ${business._id}:`, error);
-      }
+      await patternQueue.add(
+        `pattern-analysis-${business._id}`,
+        { businessId: business._id.toString() },
+        {
+          attempts: 3,
+          backoff: {
+            type: 'exponential',
+            delay: 5000 // 5 seconds initial delay
+          }
+        }
+      );
+      console.log(`Enqueued pattern analysis job for business ${business._id}`);
     }
     
   } finally {

@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 
 interface IndustrySelectorProps {
-  onSelect: (industry: Industry) => void;
+  onSelect: (industry: Industry, businessName: string) => void;
   onNext: () => void;
 }
 
@@ -31,7 +31,11 @@ const IndustrySelector = ({ onSelect, onNext }: IndustrySelectorProps) => {
 
   const handleIndustrySelect = (value: string) => {
     setSelectedIndustry(value as Industry);
-    onSelect(value as Industry);
+  };
+
+  // We're now passing both industry and business name to onSelect
+  const handleSubmit = () => {
+    onSelect(selectedIndustry, businessName);
   };
 
   const getIndustryIcon = (industry: string) => {
@@ -121,7 +125,7 @@ const IndustrySelector = ({ onSelect, onNext }: IndustrySelectorProps) => {
       
       <div className="flex justify-end pt-4">
         <Button 
-          onClick={onNext}
+          onClick={handleSubmit}
           disabled={!businessName.trim() || !selectedIndustry}
           className="w-full md:w-auto"
         >

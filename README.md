@@ -17,31 +17,65 @@ Connect to major ad platforms like Facebook and Google Ads.
 ### A/B Testing
 Run controlled experiments to optimize your ad performance.
 
-## A/B Testing
+## Security & Ownership Checks
 
-The platform includes a robust A/B testing system to compare and optimize ad variants:
+The platform implements a comprehensive security model to protect user data:
 
-### Key Features
-- Compare performance between original content and variants
-- Flexible traffic splitting (50/50, 60/40, etc.)
-- Real-time performance metrics with statistical significance
-- Automatic lift calculation and confidence scoring
+### Authentication & Authorization
+- JWT-based authentication with short-lived access tokens (15 minutes) and secure refresh tokens
+- Refresh tokens are securely hashed (SHA-256) before storage
+- Automatic token refresh when expiration is approaching
+- Role-based authorization (admin, agencyAdmin, client)
 
-### How It Works
-1. Create an experiment by selecting original and variant content
-2. Set traffic distribution and experiment duration
-3. Traffic is automatically split between variants
-4. Performance metrics are tracked and analyzed
-5. Statistical significance is calculated to validate results
+### Business & Agency Ownership
+- Every business-related endpoint enforces ownership verification
+- Business owners can only access their own business data
+- Agency admins can only access businesses explicitly linked to their agency
+- Ownership checks are enforced at the middleware level for consistent protection
 
-### Statistical Analysis
-- The system calculates lift percentage between variants
-- P-value indicates statistical confidence (target: p < 0.05)
-- Results are updated daily to help make informed decisions
+### Data Privacy
+- Clear separation of client data in multi-tenant architecture
+- API rate limiting to prevent abuse
+- Input validation and sanitization to prevent injection attacks
 
-![A/B Testing Flow](path/to/ab-testing-demo.gif)
+## Reliability & Retry Policies
 
-### Uplift Measurement
+The system is designed for production-grade reliability:
+
+### API Resilience
+- Timeouts on all external API calls (30s default)
+- Automatic retry with exponential backoff for transient errors
+- Graceful degradation when third-party services are unavailable
+
+### Job Processing
+- BullMQ-based job queues with persistence
+- Configurable retry policies (3 attempts with exponential backoff)
+- Dead letter queues for failed jobs requiring manual intervention
+- Parallel processing of businesses during ETL to maximize throughput
+
+### Quota Management
+- Atomic quota checks to prevent race conditions
+- Redis-based token reservation system
+- Proactive quota warning at 90% threshold
+- Graceful handling of quota exceeded conditions
+
+## Statistical Accuracy
+
+The platform uses rigorous statistical methods for insights and experiment evaluation:
+
+### A/B Testing
+- Chi-squared significance testing for conversion metrics
+- Wilson score confidence intervals for proportion estimation
+- Lift calculation with proper confidence bounds
+- Automated experiment results computation and statistical validation
+
+### Pattern Analysis
+- Pre-aggregation of metrics for performance
+- Business-scoped pattern discovery
+- Statistically significant insights (p < 0.05)
+- Dimensionality reduction to identify key performance drivers
+
+## Uplift Measurement
 - Content generated from insights are tracked through the full funnel
 - Performance attribution connects variants back to their source insights
 - This creates a continuous improvement loop driven by real data
@@ -51,6 +85,7 @@ The platform includes a robust A/B testing system to compare and optimize ad var
 ### Prerequisites
 - Node.js v14+
 - MongoDB
+- Redis
 - Facebook Developer Account (for Facebook Ads integration)
 - Google Developer Account (for Google Ads integration)
 

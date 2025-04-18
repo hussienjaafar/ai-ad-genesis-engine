@@ -59,9 +59,12 @@ export class AuthService {
         
         const expiresAt = new Date(Date.now() + refreshExpireMs);
         
+        // Hash the token before storing
+        const tokenHash = RefreshTokenModel.hashToken(refreshToken);
+        
         await RefreshTokenModel.create({
           userId: user._id,
-          token: refreshToken,
+          tokenHash,
           expiresAt,
           ip,
           userAgent,
@@ -106,8 +109,11 @@ export class AuthService {
   }
 
   public static async refresh(token: string, ip?: string, userAgent?: string): Promise<TokenPair> {
+    // Hash the provided token to compare with stored hash
+    const tokenHash = RefreshTokenModel.hashToken(token);
+    
     const refreshToken = await RefreshTokenModel.findOne({
-      token,
+      tokenHash,
       isDeleted: false,
     });
 
@@ -131,7 +137,10 @@ export class AuthService {
   }
 
   public static async revokeToken(token: string): Promise<void> {
-    const refreshToken = await RefreshTokenModel.findOne({ token, isDeleted: false });
+    // Hash the token to find it in the database
+    const tokenHash = RefreshTokenModel.hashToken(token);
+    
+    const refreshToken = await RefreshTokenModel.findOne({ tokenHash, isDeleted: false });
     if (!refreshToken) return;
 
     refreshToken.isDeleted = true;

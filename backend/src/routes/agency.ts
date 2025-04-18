@@ -1,136 +1,30 @@
 
 import express from 'express';
-import AgencyController from '../controllers/agencyController';
+import agencyController from '../controllers/agencyController';
 import authorize from '../middleware/auth';
-import checkRole from '../middleware/roles';
+import { verifyAgencyOwnership } from '../middleware/ownership';
 
 const router = express.Router();
 
-/**
- * @swagger
- * tags:
- *   name: Agencies
- *   description: Agency management endpoints
- */
+// Create a new agency (admin only can create agencies)
+router.post('/', authorize, agencyController.createAgency);
 
-/**
- * @swagger
- * /agencies:
- *   post:
- *     summary: Create a new agency
- *     tags: [Agencies]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - name
- *             properties:
- *               name:
- *                 type: string
- *     responses:
- *       201:
- *         description: Agency created successfully
- *       400:
- *         description: Invalid request body
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden - Insufficient permissions
- */
-router.post('/', authorize, checkRole('agencyAdmin'), AgencyController.createAgency);
+// List all agencies
+router.get('/', authorize, agencyController.getAgencies);
 
-/**
- * @swagger
- * /agencies:
- *   get:
- *     summary: Get all agencies for the authenticated user
- *     tags: [Agencies]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: List of agencies
- *       401:
- *         description: Unauthorized
- */
-router.get('/', authorize, AgencyController.getAgencies);
+// Get a specific agency by ID
+router.get('/:agencyId', authorize, verifyAgencyOwnership, agencyController.getAgencyById);
 
-/**
- * @swagger
- * /agencies/{id}/clients:
- *   put:
- *     summary: Add or remove clients from an agency
- *     tags: [Agencies]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Agency ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - action
- *               - clientBusinessIds
- *             properties:
- *               action:
- *                 type: string
- *                 enum: [add, remove]
- *               clientBusinessIds:
- *                 type: array
- *                 items:
- *                   type: string
- *     responses:
- *       200:
- *         description: Agency clients updated successfully
- *       400:
- *         description: Invalid request body
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden - Insufficient permissions
- *       404:
- *         description: Agency not found
- */
-router.put('/:id/clients', authorize, checkRole('agencyAdmin'), AgencyController.updateAgencyClients);
+// Update agency
+router.put('/:agencyId', authorize, verifyAgencyOwnership, agencyController.updateAgency);
 
-/**
- * @swagger
- * /agencies/{id}/overview:
- *   get:
- *     summary: Get agency overview with aggregated KPIs and experiments
- *     tags: [Agencies]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Agency ID
- *     responses:
- *       200:
- *         description: Agency overview data
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden - Insufficient permissions
- *       404:
- *         description: Agency not found
- */
-router.get('/:id/overview', authorize, checkRole('agencyAdmin'), AgencyController.getAgencyOverview);
+// Delete agency
+router.delete('/:agencyId', authorize, verifyAgencyOwnership, agencyController.deleteAgency);
+
+// Add client business to agency
+router.post('/:agencyId/clients', authorize, verifyAgencyOwnership, agencyController.addClientBusiness);
+
+// Remove client business from agency
+router.delete('/:agencyId/clients/:businessId', authorize, verifyAgencyOwnership, agencyController.removeClientBusiness);
 
 export default router;

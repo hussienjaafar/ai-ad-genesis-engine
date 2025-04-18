@@ -1,209 +1,114 @@
 
-import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
-import MainLayout from "../components/Layout/MainLayout";
-import PageHeader from "../components/Common/PageHeader";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { usePerformanceMetrics, usePerformanceInsights } from "@/hooks/useAnalytics";
-import { Loader2, RefreshCw } from "lucide-react";
-import { toast } from "sonner";
-import KpiCard from "@/components/Analytics/KpiCard";
-import PerformanceChart from "@/components/Analytics/PerformanceChart";
-import TopPatternsTable from "@/components/Analytics/TopPatternsTable";
-import { Skeleton } from "@/components/ui/skeleton";
+import React, { useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { format } from 'date-fns';
+import MainLayout from '@/components/Layout/MainLayout';
+import { useAnalytics } from '@/hooks/useAnalytics';
+import { PerformanceMetrics } from '@/components/Analytics/PerformanceMetrics';
+import { PerformanceChart } from '@/components/Analytics/PerformanceChart';
+import { InsightsPanel } from '@/components/Analytics/InsightsPanel';
+import { TopPatternsTable } from '@/components/Analytics/TopPatternsTable';
+import { GenerateFromInsightModal } from '@/components/Analytics/GenerateFromInsightModal';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { CircleHelp, CalendarClock } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-const AnalyticsDashboard = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const daysParam = searchParams.get("days");
-  const [timeframe, setTimeframe] = useState<number>(daysParam ? parseInt(daysParam) : 30);
-  const [businessId, setBusinessId] = useState<string>("123"); // In a real app, this would come from context
+export default function AnalyticsDashboard() {
+  const { id } = useParams<{ id: string }>();
+  const businessId = id || '';
   
-  const { 
-    data: performanceData, 
-    isLoading: isLoadingPerformance, 
-    error: performanceError, 
-    refetch: refetchPerformance 
-  } = usePerformanceMetrics(businessId, timeframe);
+  const [selectedInsight, setSelectedInsight] = useState<string | null>(null);
   
-  const { 
-    data: insightsData, 
-    isLoading: isLoadingInsights, 
-    error: insightsError, 
-    refetch: refetchInsights 
-  } = usePerformanceInsights(businessId);
-  
-  useEffect(() => {
-    if (daysParam && !isNaN(parseInt(daysParam))) {
-      setTimeframe(parseInt(daysParam));
-    }
-  }, [daysParam]);
+  const {
+    kpis,
+    performanceData,
+    insights,
+    patterns,
+    lastUpdated,
+    isLoading
+  } = useAnalytics(businessId);
 
-  const handleTimeframeChange = (days: number) => {
-    setTimeframe(days);
-    setSearchParams({ days: days.toString() });
-  };
-
-  const handleRefresh = () => {
-    refetchPerformance();
-    refetchInsights();
-    toast.success("Refreshing analytics data...");
-  };
-
-  if (isLoadingPerformance && !performanceData) {
+  if (!businessId) {
     return (
       <MainLayout>
-        <div className="flex h-screen items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </MainLayout>
-    );
-  }
-
-  if (performanceError) {
-    return (
-      <MainLayout>
-        <PageHeader 
-          title="Analytics Dashboard" 
-          description="Performance metrics and insights for your advertising"
-        />
-        <Card>
-          <CardContent className="py-10">
-            <div className="text-center">
-              <p className="text-destructive mb-4">Error loading performance data</p>
-              <Button onClick={() => refetchPerformance()}>Try Again</Button>
-            </div>
-          </CardContent>
-        </Card>
+        <Alert>
+          <AlertDescription>
+            Please select a business to view analytics.
+          </AlertDescription>
+        </Alert>
       </MainLayout>
     );
   }
 
   return (
     <MainLayout>
-      <div className="flex justify-between items-center mb-6">
-        <PageHeader 
-          title="Analytics Dashboard" 
-          description="Performance metrics and insights for your advertising"
-        />
-        <Button onClick={handleRefresh} variant="outline" className="flex gap-2">
-          <RefreshCw className="h-4 w-4" />
-          Refresh Data
-        </Button>
-      </div>
-      
-      <div className="mb-6">
-        <div className="inline-flex items-center rounded-md border border-input bg-background p-1 shadow-sm">
-          <Button 
-            variant={timeframe === 7 ? "default" : "ghost"} 
-            className="rounded"
-            onClick={() => handleTimeframeChange(7)}
-          >
-            7 Days
-          </Button>
-          <Button 
-            variant={timeframe === 30 ? "default" : "ghost"}
-            className="rounded"
-            onClick={() => handleTimeframeChange(30)}
-          >
-            30 Days
-          </Button>
-          <Button 
-            variant={timeframe === 90 ? "default" : "ghost"}
-            className="rounded"
-            onClick={() => handleTimeframeChange(90)}
-          >
-            90 Days
-          </Button>
-        </div>
-      </div>
-      
-      {performanceData && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <KpiCard 
-              title="Total Spend" 
-              value={performanceData.kpis.spend}
-              change={5.2} // Mock value for change - would come from API
-              unit="currency"
-              isPositiveGood={false}
-            />
-            <KpiCard 
-              title="ROAS" 
-              value={performanceData.kpis.roas}
-              change={3.8}
-              unit="number"
-              isPositiveGood={true}
-            />
-            <KpiCard 
-              title="CPL" 
-              value={performanceData.kpis.cpl}
-              change={-2.1}
-              unit="currency"
-              isPositiveGood={false}
-            />
-            <KpiCard 
-              title="CTR" 
-              value={performanceData.kpis.ctr}
-              change={7.5}
-              unit="percentage"
-              isPositiveGood={true}
-            />
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
+            <p className="text-muted-foreground">
+              Track your ad performance and discover patterns
+            </p>
           </div>
           
-          <Tabs defaultValue="performance" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="performance">Performance</TabsTrigger>
-              <TabsTrigger value="patterns">Patterns & Insights</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="performance" className="space-y-6">
-              {performanceData.daily && performanceData.daily.length > 0 ? (
-                <PerformanceChart 
-                  data={performanceData.daily} 
-                  days={timeframe} 
-                />
-              ) : (
-                <Card>
-                  <CardContent className="flex flex-col items-center justify-center py-16">
-                    <p className="text-muted-foreground mb-4">No performance data available yet</p>
-                    <p className="text-sm text-muted-foreground">Charts will display once at least one day of performance data is ingested.</p>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="patterns" className="space-y-6">
-              {isLoadingInsights && !insightsData ? (
-                <div className="flex flex-col space-y-4">
-                  <Skeleton className="h-12 w-full" />
-                  <Skeleton className="h-64 w-full" />
-                </div>
-              ) : insightsError ? (
-                <Card>
-                  <CardContent className="py-10">
-                    <div className="text-center">
-                      <p className="text-destructive mb-4">Error loading insights data</p>
-                      <Button onClick={() => refetchInsights()}>Try Again</Button>
+          {/* Data freshness indicator */}
+          {lastUpdated && (
+            <div className="flex items-center text-sm text-muted-foreground">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <div className="flex items-center gap-2">
+                      <CalendarClock className="h-4 w-4" />
+                      <span>
+                        Data as of {format(new Date(lastUpdated), 'yyyy-MM-dd HH:mm')}
+                      </span>
+                      <CircleHelp className="h-4 w-4" />
                     </div>
-                  </CardContent>
-                </Card>
-              ) : insightsData ? (
-                <TopPatternsTable insights={insightsData.patternInsights} />
-              ) : (
-                <Card>
-                  <CardContent className="py-10 text-center text-muted-foreground">
-                    No insights data available
-                  </CardContent>
-                </Card>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Data is refreshed daily through our ETL process</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              {new Date(lastUpdated).getTime() < Date.now() - 86400000 * 3 && (
+                <Badge variant="outline" className="ml-2 text-amber-500 border-amber-500">
+                  Data is more than 3 days old
+                </Badge>
               )}
-            </TabsContent>
-          </Tabs>
+            </div>
+          )}
         </div>
-      )}
+
+        {isLoading ? (
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* Loading skeletons */}
+            <div className="border rounded-lg p-4 h-[300px] bg-muted/10 animate-pulse" />
+            <div className="border rounded-lg p-4 h-[300px] bg-muted/10 animate-pulse" />
+            <div className="border rounded-lg p-4 h-[300px] bg-muted/10 animate-pulse md:col-span-2" />
+          </div>
+        ) : (
+          <>
+            <PerformanceMetrics kpis={kpis} />
+            <div className="grid gap-4 md:grid-cols-2">
+              <PerformanceChart performanceData={performanceData} />
+              <InsightsPanel 
+                insights={insights} 
+                onGenerateContent={(insightId) => setSelectedInsight(insightId)} 
+              />
+              <TopPatternsTable patterns={patterns} className="md:col-span-2" />
+            </div>
+            
+            <GenerateFromInsightModal 
+              isOpen={!!selectedInsight} 
+              onClose={() => setSelectedInsight(null)}
+              insightId={selectedInsight || ''}
+              businessId={businessId}
+            />
+          </>
+        )}
+      </div>
     </MainLayout>
   );
-};
-
-export default AnalyticsDashboard;
+}

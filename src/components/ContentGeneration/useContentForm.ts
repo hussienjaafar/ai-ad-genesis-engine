@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useContentGeneration } from "@/hooks/useContentGeneration";
-import { ContentFormValues, contentFormSchema, contentTypeMap, ContentType } from "./types";
+import { ContentFormValues, contentFormSchema, ContentType, contentTypeMap } from "./types";
 
 export function useContentForm(businessId: string, onContentGenerated: (content: any) => void) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -12,7 +12,7 @@ export function useContentForm(businessId: string, onContentGenerated: (content:
   const form = useForm<ContentFormValues>({
     resolver: zodResolver(contentFormSchema),
     defaultValues: {
-      contentType: "facebook",
+      contentType: "facebook" as ContentType,
       tone: "professional",
       targetAudience: "",
       additionalNotes: "",
@@ -29,12 +29,9 @@ export function useContentForm(businessId: string, onContentGenerated: (content:
       additionalDetails: values.additionalNotes || undefined,
     };
     
-    // The contentType is validated by Zod schema, so we can safely assert its type here
-    const contentType = values.contentType as ContentType;
-    
     generateContent(
       { 
-        contentType: contentTypeMap[contentType],
+        contentType: contentTypeMap[values.contentType],
         params 
       },
       {

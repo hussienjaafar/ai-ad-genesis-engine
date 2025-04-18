@@ -34,6 +34,7 @@ export interface PerformanceMetrics {
     conversions?: number;
   };
   daily: DailyPerformance[];
+  lastUpdated?: string; // Add lastUpdated field to match actual data structure
 }
 
 export interface PatternInsight {

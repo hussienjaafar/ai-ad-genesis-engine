@@ -35,7 +35,7 @@ export default function AnalyticsDashboard() {
   const isLoading = isLoadingMetrics || isLoadingInsights;
   const lastUpdated = performanceData?.lastUpdated || null;
   const kpis = performanceData?.kpis || null;
-  const patterns = insights?.patterns || [];
+  const patterns = insights?.patternInsights || []; // Use patternInsights instead of patterns
 
   if (!businessId) {
     return (
@@ -101,7 +101,7 @@ export default function AnalyticsDashboard() {
             <PerformanceMetrics 
               isLoading={isLoadingMetrics} 
               error={metricsError} 
-              performanceData={kpis} 
+              performanceData={performanceData?.kpis} 
             />
             <div className="grid gap-4 md:grid-cols-2">
               <PerformanceChart 
@@ -115,7 +115,6 @@ export default function AnalyticsDashboard() {
               />
               <TopPatternsTable 
                 insights={insights?.patternInsights || []} 
-                className="md:col-span-2" 
               />
             </div>
             
@@ -124,7 +123,6 @@ export default function AnalyticsDashboard() {
                 isOpen={!!selectedInsight} 
                 onClose={() => setSelectedInsight(null)}
                 insight={insights?.patternInsights.find(i => i._id === selectedInsight) || null}
-                businessId={businessId}
               />
             )}
           </>

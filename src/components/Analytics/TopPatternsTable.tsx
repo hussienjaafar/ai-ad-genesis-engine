@@ -9,12 +9,13 @@ import { GenerateFromInsightModal } from "./GenerateFromInsightModal";
 
 interface TopPatternsTableProps {
   insights: PatternInsight[];
+  className?: string; // Make className optional
 }
 
 type SortField = "element" | "elementType" | "uplift" | "confidence";
 type SortDirection = "asc" | "desc";
 
-const TopPatternsTable = ({ insights }: TopPatternsTableProps) => {
+const TopPatternsTable = ({ insights, className }: TopPatternsTableProps) => {
   const [sortField, setSortField] = useState<SortField>("uplift");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [selectedInsight, setSelectedInsight] = useState<PatternInsight | null>(null);
@@ -76,7 +77,7 @@ const TopPatternsTable = ({ insights }: TopPatternsTableProps) => {
   const sortedInsights = getSortedInsights();
 
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader>
         <CardTitle>Top Performing Patterns</CardTitle>
         <CardDescription>

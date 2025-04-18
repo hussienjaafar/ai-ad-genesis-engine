@@ -22,7 +22,7 @@ import { useContentGeneration } from "@/hooks/useContentGeneration";
 import { ArrowRight, CheckCircle, Sparkles } from "lucide-react";
 
 interface GenerateFromInsightModalProps {
-  insight: PatternInsight;
+  insight: PatternInsight | null;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -56,6 +56,8 @@ export function GenerateFromInsightModal({ insight, isOpen, onClose }: GenerateF
   });
 
   const onSubmit = (data: FormValues) => {
+    if (!insight?._id) return;
+    
     generateContent(
       {
         contentType: data.contentType,
@@ -78,6 +80,9 @@ export function GenerateFromInsightModal({ insight, isOpen, onClose }: GenerateF
     navigate(`/content/${businessId}?highlight=${generatedContentId}`);
     onClose();
   };
+
+  // If there's no insight, don't render the modal
+  if (!insight) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

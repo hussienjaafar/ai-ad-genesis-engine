@@ -1,4 +1,3 @@
-
 import request from 'supertest';
 import express from 'express';
 import cors from 'cors';
@@ -6,6 +5,7 @@ import bodyParser from 'body-parser';
 import authRoutes from '../src/routes/auth';
 import UserModel from '../src/models/User';
 import jwt from 'jsonwebtoken';
+import RefreshTokenModel from '../src/models/RefreshToken';
 
 // Mock JWT secret for tests
 process.env.JWT_SECRET = 'test-jwt-secret';
@@ -136,6 +136,54 @@ describe('Auth API', () => {
       const response = await request(app)
         .get('/api/auth/me')
         .set('Authorization', 'Bearer invalid-token');
+
+      expect(response.status).toBe(401);
+    });
+  });
+
+  describe('POST /api/auth/refresh', () => {
+    let user: any;
+    let refreshToken: string;
+
+    beforeEach(async () => {
+      // Create a test user
+      user = await UserModel.create({
+        email: 'refresh@example.com',
+        passwordHash: 'Password123', // Will be hashed
+        role: 'client',
+      });
+
+      // Get initial tokens
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: 'refresh@example.com',
+          password: 'Password123',
+        });
+
+      refreshToken = response.headers['set-cookie'][0]
+        .split(';')[0]
+        .split('=')[1];
+    });
+
+    it('should refresh tokens successfully', async () => {
+      const response = await request(app)
+        .post('/api/auth/refresh')
+        .set('Cookie', `refreshToken=${refreshToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('accessToken');
+      expect(response.headers['set-cookie']).toBeDefined();
+      
+      // Old refresh token should be invalidated
+      const oldToken = await RefreshTokenModel.findOne({ token: refreshToken });
+      expect(oldToken?.isDeleted).toBe(true);
+    });
+
+    it('should fail with invalid refresh token', async () => {
+      const response = await request(app)
+        .post('/api/auth/refresh')
+        .set('Cookie', 'refreshToken=invalid-token');
 
       expect(response.status).toBe(401);
     });

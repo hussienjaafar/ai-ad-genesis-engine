@@ -6,19 +6,23 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
 import { connectToDatabase } from './lib/mongoose';
-
-// Import routes
 import apiRoutes from './routes';
 import setupSwagger from './lib/swagger';
 
-// Initialize Express app
 const app = express();
 const port = process.env.PORT || 4000;
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? process.env.FRONTEND_URL 
+    : /localhost:(5173|3000)$/,
+  credentials: true
+}));
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));

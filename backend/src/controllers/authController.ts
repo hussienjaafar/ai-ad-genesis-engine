@@ -1,6 +1,5 @@
-
 import { Request, Response } from 'express';
-import AuthService from '../services/authService';
+import AuthService, { COOKIE_OPTIONS } from '../services/authService';
 import UserModel from '../models/User';
 
 export class AuthController {
@@ -48,7 +47,6 @@ export class AuthController {
     try {
       const { email, password, role } = req.body;
       
-      // Basic validation
       if (!email || !password) {
         return res.status(400).json({ error: 'Email and password are required' });
       }
@@ -66,7 +64,11 @@ export class AuthController {
         userAgent
       );
 
-      return res.status(201).json(tokens);
+      res.cookie('refreshToken', tokens.refreshToken, COOKIE_OPTIONS);
+      
+      return res.status(201).json({ 
+        accessToken: tokens.accessToken 
+      });
     } catch (error: any) {
       if (error.message === 'User with this email already exists') {
         return res.status(409).json({ error: error.message });
@@ -117,7 +119,6 @@ export class AuthController {
     try {
       const { email, password } = req.body;
       
-      // Basic validation
       if (!email || !password) {
         return res.status(400).json({ error: 'Email and password are required' });
       }
@@ -127,7 +128,11 @@ export class AuthController {
 
       const tokens = await AuthService.login(email, password, ip, userAgent);
 
-      return res.json(tokens);
+      res.cookie('refreshToken', tokens.refreshToken, COOKIE_OPTIONS);
+      
+      return res.json({ 
+        accessToken: tokens.accessToken 
+      });
     } catch (error: any) {
       console.error('Login error:', error);
       return res.status(401).json({ error: 'Invalid email or password' });
@@ -159,7 +164,7 @@ export class AuthController {
    */
   public static async refresh(req: Request, res: Response): Promise<Response> {
     try {
-      const { refreshToken } = req.body;
+      const refreshToken = req.cookies.refreshToken;
       
       if (!refreshToken) {
         return res.status(400).json({ error: 'Refresh token is required' });
@@ -170,7 +175,11 @@ export class AuthController {
 
       const tokens = await AuthService.refresh(refreshToken, ip, userAgent);
 
-      return res.json(tokens);
+      res.cookie('refreshToken', tokens.refreshToken, COOKIE_OPTIONS);
+      
+      return res.json({ 
+        accessToken: tokens.accessToken 
+      });
     } catch (error: any) {
       console.error('Token refresh error:', error);
       return res.status(401).json({ error: 'Invalid or expired refresh token' });
@@ -204,12 +213,13 @@ export class AuthController {
    */
   public static async logout(req: Request, res: Response): Promise<Response> {
     try {
-      const { refreshToken } = req.body;
+      const refreshToken = req.cookies.refreshToken;
       
       if (refreshToken) {
         await AuthService.revokeToken(refreshToken);
       }
 
+      res.clearCookie('refreshToken', COOKIE_OPTIONS);
       return res.json({ message: 'Logged out successfully' });
     } catch (error) {
       console.error('Logout error:', error);

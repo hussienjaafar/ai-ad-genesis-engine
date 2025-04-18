@@ -7,7 +7,23 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 });
+
+let isRefreshing = false;
+let failedQueue: any[] = [];
+
+const processQueue = (error: any = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve();
+    }
+  });
+  
+  failedQueue = [];
+};
 
 // Add request interceptor to attach JWT
 api.interceptors.request.use(
@@ -28,27 +44,39 @@ api.interceptors.response.use(
     const originalRequest = error.config;
     
     if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      
-      try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (!refreshToken) {
-          throw new Error('No refresh token available');
+      if (isRefreshing) {
+        try {
+          // Wait for the other refresh request
+          await new Promise<void>((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+          });
+          return api(originalRequest);
+        } catch (err) {
+          return Promise.reject(err);
         }
+      }
 
-        const response = await axios.post('/api/auth/refresh', { refreshToken });
-        const { accessToken, refreshToken: newRefreshToken } = response.data;
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const response = await api.post('/auth/refresh');
+        const { accessToken } = response.data;
         
         localStorage.setItem('accessToken', accessToken);
-        localStorage.setItem('refreshToken', newRefreshToken);
         
+        // Update header for retry
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        
+        processQueue();
         return api(originalRequest);
       } catch (refreshError) {
+        processQueue(refreshError);
         localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
         window.location.href = '/login';
         return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
       }
     }
 

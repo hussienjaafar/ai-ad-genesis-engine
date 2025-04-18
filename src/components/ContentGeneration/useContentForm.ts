@@ -53,4 +53,3 @@ export function useContentForm(businessId: string, onContentGenerated: (content:
     onSubmit
   };
 }
-

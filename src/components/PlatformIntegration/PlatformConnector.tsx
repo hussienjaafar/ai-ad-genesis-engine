@@ -1,13 +1,11 @@
 
-import { useState, useEffect } from "react";
-import { mockAdPlatforms } from "@/lib/mockData";
+import { useState } from "react";
 import { toast } from "sonner";
 import { AdPlatform } from "@/interfaces/types";
-import { PlatformCard } from "./components/PlatformCard";
-import { ConnectPlatformDialog } from "./components/ConnectPlatformDialog";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useOAuth } from "@/hooks/useOAuth";
-import api from "@/lib/api";
+import { usePlatformStatus } from "@/hooks/usePlatformStatus";
+import { PlatformGrid } from "./components/PlatformGrid";
 
 interface PlatformConnectorProps {
   onConnected: (platform: AdPlatform) => void;
@@ -15,18 +13,21 @@ interface PlatformConnectorProps {
   businessId?: string;
 }
 
-const PlatformConnector = ({ onConnected, minimal = false, businessId = "123" }: PlatformConnectorProps) => {
-  const [platforms, setPlatforms] = useState(mockAdPlatforms);
+const PlatformConnector = ({ 
+  onConnected, 
+  minimal = false, 
+  businessId = "123" 
+}: PlatformConnectorProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentPlatform, setCurrentPlatform] = useState<AdPlatform | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Use the OAuth hook
   const { isLoading, currentPlatform: currentOAuthPlatform, initiateOAuth } = useOAuth();
+  const { platforms, setPlatforms } = usePlatformStatus(businessId);
   
   // Check if returning from OAuth flow with success
-  useEffect(() => {
+  useState(() => {
     const query = new URLSearchParams(location.search);
     const success = query.get('success');
     
@@ -83,74 +84,18 @@ const PlatformConnector = ({ onConnected, minimal = false, businessId = "123" }:
     }
   };
 
-  // Fetch platform status from API (in real app)
-  useEffect(() => {
-    // This would be an API call in a real app
-    const fetchPlatformStatus = async () => {
-      try {
-        // Mock data for demonstration
-        const platformsWithStatus = platforms.map(platform => {
-          if (platform.name === 'facebook') {
-            return {
-              ...platform,
-              needsReauth: Math.random() > 0.5 // Random for demo purposes
-            };
-          }
-          return platform;
-        });
-        
-        setPlatforms(platformsWithStatus);
-      } catch (error) {
-        console.error('Error fetching platform status:', error);
-      }
-    };
-    
-    if (businessId) {
-      fetchPlatformStatus();
-    }
-  }, [businessId]);
-
-  if (minimal) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {platforms.slice(0, 2).map((platform) => (
-          <PlatformCard
-            key={platform.id}
-            platform={platform}
-            onConnect={handleConnect}
-            minimal={true}
-            isLoading={isLoading && currentOAuthPlatform === platform.name}
-          />
-        ))}
-        <ConnectPlatformDialog
-          platform={currentPlatform}
-          isOpen={isDialogOpen}
-          onOpenChange={setIsDialogOpen}
-          onConfirm={handleConnectConfirm}
-        />
-      </div>
-    );
-  }
-
   return (
-    <>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {platforms.map((platform) => (
-          <PlatformCard
-            key={platform.id}
-            platform={platform}
-            onConnect={handleConnect}
-            isLoading={isLoading && currentOAuthPlatform === platform.name}
-          />
-        ))}
-      </div>
-      <ConnectPlatformDialog
-        platform={currentPlatform}
-        isOpen={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        onConfirm={handleConnectConfirm}
-      />
-    </>
+    <PlatformGrid
+      platforms={platforms}
+      onConnect={handleConnect}
+      minimal={minimal}
+      isLoading={isLoading}
+      currentOAuthPlatform={currentOAuthPlatform}
+      isDialogOpen={isDialogOpen}
+      currentPlatform={currentPlatform}
+      onOpenChange={setIsDialogOpen}
+      onConfirmDialog={handleConnectConfirm}
+    />
   );
 };
 

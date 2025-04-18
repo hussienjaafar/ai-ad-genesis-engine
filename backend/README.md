@@ -1,4 +1,3 @@
-
 # AI Ad Genesis Engine - Backend
 
 This is the backend API for the AI Ad Genesis Engine application.
@@ -82,6 +81,19 @@ The application supports connecting to ad platforms using OAuth:
    - CSRF protection with state parameter validation using Redis
    - PKCE protection for Google OAuth flow
    - Sensitive operations require authentication and proper authorization
+
+### Going Live with Google
+
+To move your Google Ads integration to production status:
+
+1. Configure OAuth consent screen in Google Cloud Console:
+   - Add required scopes: `openid`, `profile`, `email`
+   - Add any additional API scopes needed for Google Ads API
+2. Set `PUBLIC_URL` environment variable to your production domain
+3. Update authorized redirect URIs in Google Cloud Console
+4. Submit for verification if requesting sensitive scopes
+
+After approval, your Google Ads integration will work for all users.
 
 ### Going Live with Meta
 
@@ -203,4 +215,3 @@ Visit http://localhost:4000/docs to access the API documentation.
 - **Analytics**:
   - GET `/api/businesses/:id/analytics/performance` - Get performance metrics
   - GET `/api/businesses/:id/analytics/insights` - Get performance insights
-

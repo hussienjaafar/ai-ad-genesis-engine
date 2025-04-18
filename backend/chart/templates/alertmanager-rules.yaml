@@ -10,7 +10,7 @@ spec:
   - name: etl.rules
     rules:
     - alert: ETLJobFailures
-      expr: (etl_job_failures_total - etl_job_failures_total offset 5m) > 0
+      expr: increase(etl_job_failures_total[5m]) > 0
       for: 5m
       labels:
         severity: warning

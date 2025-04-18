@@ -34,3 +34,27 @@ export const usePerformanceInsights = (businessId: string) => {
     staleTime: 5 * 60_000 // 5 minutes
   });
 };
+
+// For backwards compatibility, export a combined hook
+export const useAnalytics = (businessId: string) => {
+  const { 
+    data: performanceData, 
+    isLoading: isLoadingMetrics 
+  } = usePerformanceMetrics(businessId);
+
+  const { 
+    data: insights, 
+    isLoading: isLoadingInsights 
+  } = usePerformanceInsights(businessId);
+
+  const isLoading = isLoadingMetrics || isLoadingInsights;
+  
+  return {
+    kpis: performanceData?.kpis || null,
+    performanceData: performanceData?.daily || [],
+    insights: insights || null,
+    patterns: insights?.patterns || [],
+    lastUpdated: performanceData?.lastUpdated || null,
+    isLoading
+  };
+};

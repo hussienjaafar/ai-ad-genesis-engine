@@ -3,11 +3,11 @@ import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import MainLayout from '@/components/Layout/MainLayout';
-import { useAnalytics } from '@/hooks/useAnalytics';
-import { PerformanceMetrics } from '@/components/Analytics/PerformanceMetrics';
-import { PerformanceChart } from '@/components/Analytics/PerformanceChart';
-import { InsightsPanel } from '@/components/Analytics/InsightsPanel';
-import { TopPatternsTable } from '@/components/Analytics/TopPatternsTable';
+import { usePerformanceMetrics, usePerformanceInsights } from '@/hooks/useAnalytics';
+import PerformanceMetrics from '@/components/Analytics/PerformanceMetrics';
+import PerformanceChart from '@/components/Analytics/PerformanceChart';
+import InsightsPanel from '@/components/Analytics/InsightsPanel';
+import TopPatternsTable from '@/components/Analytics/TopPatternsTable';
 import { GenerateFromInsightModal } from '@/components/Analytics/GenerateFromInsightModal';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -20,14 +20,22 @@ export default function AnalyticsDashboard() {
   
   const [selectedInsight, setSelectedInsight] = useState<string | null>(null);
   
-  const {
-    kpis,
-    performanceData,
-    insights,
-    patterns,
-    lastUpdated,
-    isLoading
-  } = useAnalytics(businessId);
+  const { 
+    data: performanceData, 
+    isLoading: isLoadingMetrics, 
+    error: metricsError 
+  } = usePerformanceMetrics(businessId);
+
+  const { 
+    data: insights, 
+    isLoading: isLoadingInsights, 
+    error: insightsError 
+  } = usePerformanceInsights(businessId);
+
+  const isLoading = isLoadingMetrics || isLoadingInsights;
+  const lastUpdated = performanceData?.lastUpdated || null;
+  const kpis = performanceData?.kpis || null;
+  const patterns = insights?.patterns || [];
 
   if (!businessId) {
     return (
@@ -90,22 +98,35 @@ export default function AnalyticsDashboard() {
           </div>
         ) : (
           <>
-            <PerformanceMetrics kpis={kpis} />
+            <PerformanceMetrics 
+              isLoading={isLoadingMetrics} 
+              error={metricsError} 
+              performanceData={kpis} 
+            />
             <div className="grid gap-4 md:grid-cols-2">
-              <PerformanceChart performanceData={performanceData} />
-              <InsightsPanel 
-                insights={insights} 
-                onGenerateContent={(insightId) => setSelectedInsight(insightId)} 
+              <PerformanceChart 
+                data={performanceData?.daily || []} 
+                days={30} 
               />
-              <TopPatternsTable patterns={patterns} className="md:col-span-2" />
+              <InsightsPanel 
+                isLoading={isLoadingInsights} 
+                error={insightsError} 
+                insightsData={insights} 
+              />
+              <TopPatternsTable 
+                insights={insights?.patternInsights || []} 
+                className="md:col-span-2" 
+              />
             </div>
             
-            <GenerateFromInsightModal 
-              isOpen={!!selectedInsight} 
-              onClose={() => setSelectedInsight(null)}
-              insightId={selectedInsight || ''}
-              businessId={businessId}
-            />
+            {selectedInsight && (
+              <GenerateFromInsightModal 
+                isOpen={!!selectedInsight} 
+                onClose={() => setSelectedInsight(null)}
+                insight={insights?.patternInsights.find(i => i._id === selectedInsight) || null}
+                businessId={businessId}
+              />
+            )}
           </>
         )}
       </div>

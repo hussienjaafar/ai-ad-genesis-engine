@@ -101,7 +101,7 @@ export default function AnalyticsDashboard() {
             <PerformanceMetrics 
               isLoading={isLoadingMetrics} 
               error={metricsError} 
-              performanceData={performanceData?.kpis} 
+              performanceData={performanceData} 
             />
             <div className="grid gap-4 md:grid-cols-2">
               <PerformanceChart 

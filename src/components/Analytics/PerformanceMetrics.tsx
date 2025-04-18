@@ -44,6 +44,9 @@ const PerformanceMetrics = ({ isLoading, error, performanceData }: PerformanceMe
     );
   }
 
+  // Use kpis from performanceData if available
+  const kpis = performanceData.kpis || {};
+  
   // Default values if totals are not available
   const totals = performanceData.totals || {
     impressions: 0,

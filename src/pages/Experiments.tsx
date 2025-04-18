@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useExperiments } from "@/hooks/useExperiments";
@@ -75,7 +74,6 @@ const ExperimentsPage = () => {
           <PageHeader
             title="A/B Test Experiments"
             description="Create and manage A/B tests to optimize your content performance"
-            icon={Beaker}
           />
           <Button onClick={() => setIsCreateModalOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />

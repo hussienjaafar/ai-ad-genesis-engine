@@ -177,7 +177,7 @@ const CreateExperimentModal = ({ businessId, onClose }: CreateExperimentModalPro
           </div>
 
           {isNonRecommendedSplit && (
-            <Alert variant="warning" className="bg-yellow-50 border-yellow-200">
+            <Alert className="bg-yellow-50 border-yellow-200">
               <AlertTriangle className="h-4 w-4 text-yellow-500" />
               <AlertDescription className="text-yellow-700 text-sm">
                 50/50 split is recommended for optimal statistical power. Uneven splits may require more traffic to detect changes.

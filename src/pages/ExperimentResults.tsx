@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import MainLayout from "@/components/Layout/MainLayout";
@@ -6,7 +5,7 @@ import PageHeader from "@/components/Common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Beaker, AlertTriangle, ArrowLeft, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { Beaker, AlertTriangle, ArrowLeft, CheckCircle, XCircle, Loader2, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
@@ -21,12 +20,11 @@ const ExperimentResults = () => {
   const { id: experimentId = "" } = useParams<{ id: string }>();
   const [businessId, setBusinessId] = useState<string | null>(null);
   
-  // Fetch the experiment details
   const { data: experiment, isLoading: experimentLoading, error: experimentError } = useQuery({
     queryKey: ['experiment', experimentId],
     queryFn: async () => {
       const response = await api.get(`/experiments/${experimentId}`);
-      setBusinessId(response.data.businessId); // Set the businessId from the experiment
+      setBusinessId(response.data.businessId);
       return response.data as Experiment;
     }
   });
@@ -43,7 +41,6 @@ const ExperimentResults = () => {
       { id: experimentId, status: 'completed' },
       {
         onSuccess: () => {
-          // Refresh the experiment data
           window.location.reload();
         }
       }
@@ -120,7 +117,6 @@ const ExperimentResults = () => {
               <PageHeader
                 title={experiment?.name || "Experiment Results"}
                 description={`Started on ${formatDate(experiment?.startDate)}`}
-                icon={Beaker}
               />
             </div>
           </div>

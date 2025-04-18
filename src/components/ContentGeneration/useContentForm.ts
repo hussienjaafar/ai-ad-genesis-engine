@@ -29,9 +29,12 @@ export function useContentForm(businessId: string, onContentGenerated: (content:
       additionalDetails: values.additionalNotes || undefined,
     };
     
+    // The contentType is validated by Zod schema, so we can safely assert its type here
+    const contentType = values.contentType as ContentType;
+    
     generateContent(
       { 
-        contentType: contentTypeMap[values.contentType as ContentType],
+        contentType: contentTypeMap[contentType],
         params 
       },
       {

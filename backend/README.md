@@ -57,13 +57,14 @@ The application supports connecting to ad platforms using OAuth:
    - `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` - Create credentials at https://console.developers.google.com
    - `OAUTH_ENCRYPTION_KEY` - Generate a 32-character random string for encrypting tokens (EXACTLY 32 BYTES)
    - `API_BASE_URL` - Base URL for API endpoints (for OAuth callbacks)
+   - `PUBLIC_URL` - Production public URL (required in production)
 
 2. **Connecting Facebook/Meta Ads**:
    - Navigate to the Platform Integration page
    - Click "Connect" on the Facebook/Meta card
    - Authenticate with Facebook and grant permissions
    - Select the ad account to connect
-   - Meta tokens expire after 60 days; the system will alert you 7 days prior to expiration
+   - Meta tokens expire after 60 days; the system will alert you 10 days prior to expiration
 
 3. **Connecting Google Ads**:
    - Navigate to the Platform Integration page
@@ -73,14 +74,28 @@ The application supports connecting to ad platforms using OAuth:
 
 4. **Token Refresh**:
    - Facebook tokens expire after 60 days
-   - A nightly job checks for tokens expiring within 7 days
-   - When a token nears expiration, the system marks it for reauth and shows a "Reconnect" button
+   - A nightly job checks for tokens expiring within 10 days
+   - When a token nears expiration, the system marks it for reauth, shows a "Reconnect" button, and sends alerts
 
 5. **Security**:
    - All OAuth tokens are encrypted with AES-256-GCM before storage
    - CSRF protection with state parameter validation using Redis
    - PKCE protection for Google OAuth flow
    - Sensitive operations require authentication and proper authorization
+
+### Going Live with Meta
+
+To move your Meta integration to production status:
+
+1. Follow the [Meta App Review Checklist](scripts/meta-checklist.md) to prepare your app
+2. Record a demo using the [Meta Review Demo Script](scripts/meta-review-demo.md)
+3. Ensure your server hosts the following required pages:
+   - Privacy Policy: `/legal/privacy.html`
+   - Data Deletion: `/legal/data-deletion.html`
+4. Set `PUBLIC_URL` environment variable to your production domain
+5. Submit your app for review in the Meta Developer Console
+
+After approval, your Meta integration will work for all users, not just designated test users.
 
 ### Running ETL locally
 
@@ -123,7 +138,12 @@ The system includes automated alerting for important events:
    - Alert notifications are sent to operations team
    - Integration status is updated for visibility in the UI
 
-3. **Alertmanager Configuration**:
+3. **Token Expiration Monitoring**:
+   - Daily check for tokens expiring within 10 days
+   - Automatically marks accounts needing reauthorization
+   - Sends alerts to both internal team and client via configured channels
+
+4. **Alertmanager Configuration**:
    - Monitors ETL job failures with a 5-minute evaluation window
    - Warning alerts are triggered if failures increase
    - Includes summary and description for quick troubleshooting
@@ -183,3 +203,4 @@ Visit http://localhost:4000/docs to access the API documentation.
 - **Analytics**:
   - GET `/api/businesses/:id/analytics/performance` - Get performance metrics
   - GET `/api/businesses/:id/analytics/insights` - Get performance insights
+

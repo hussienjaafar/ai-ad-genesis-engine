@@ -1,0 +1,111 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Deletion | AI Ad Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-900">
+    <div class="container max-w-4xl mx-auto px-4 py-8">
+        <header class="mb-12 text-center">
+            <h1 class="text-3xl font-bold mb-2">Data Deletion Request</h1>
+            <p class="text-gray-600">Last updated: April 18, 2025</p>
+        </header>
+
+        <main class="prose max-w-none">
+            <section class="mb-8">
+                <h2 class="text-2xl font-semibold mb-4">Data Deletion Policy</h2>
+                <p>
+                    In compliance with privacy regulations and platform policies, [COMPANY NAME] provides this data deletion mechanism 
+                    for users and platform partners. This page explains how you can request deletion of your data from our systems.
+                </p>
+            </section>
+
+            <section class="mb-8">
+                <h2 class="text-2xl font-semibold mb-4">For Platform Users</h2>
+                <p>If you are a user of our platform and wish to delete your account and associated data:</p>
+                <ol class="list-decimal pl-5 space-y-2">
+                    <li>Log into your account</li>
+                    <li>Go to Account Settings</li>
+                    <li>Select "Delete Account" at the bottom of the page</li>
+                    <li>Confirm your decision</li>
+                </ol>
+                <p class="mt-4">
+                    Your account and all associated personal data will be permanently deleted within 30 days. During this period, 
+                    your account will be deactivated and inaccessible.
+                </p>
+            </section>
+
+            <section class="mb-8">
+                <h2 class="text-2xl font-semibold mb-4">Meta/Facebook Platform Data</h2>
+                <p>
+                    If you've authorized our application to access your Meta/Facebook advertising data and wish to delete this connection:
+                </p>
+                <ol class="list-decimal pl-5 space-y-2">
+                    <li>Log into your account</li>
+                    <li>Go to Platform Integration</li>
+                    <li>Click "Disconnect" next to Meta/Facebook</li>
+                </ol>
+                <p class="mt-4">
+                    Additionally, you can revoke our application's access from your Meta/Facebook settings:
+                </p>
+                <ol class="list-decimal pl-5 space-y-2">
+                    <li>Go to <a href="https://www.facebook.com/settings?tab=business_tools" class="text-blue-600 hover:underline">Facebook Business Integrations</a></li>
+                    <li>Find our app "[YOUR APP NAME]"</li>
+                    <li>Click "Remove" to revoke access</li>
+                </ol>
+            </section>
+
+            <section class="mb-8">
+                <h2 class="text-2xl font-semibold mb-4">Meta Data Deletion Request</h2>
+                <p>
+                    This endpoint serves as a callback URL for Meta's Data Deletion Request feature. When Meta sends a user ID 
+                    deletion request, we will permanently delete all data associated with that user ID from our systems.
+                </p>
+                <div class="bg-gray-100 p-4 rounded-md">
+                    <p class="font-semibold">API Endpoint:</p>
+                    <p class="font-mono text-sm">POST /api/data-deletion/meta</p>
+                    <p class="mt-2 font-semibold">Required Parameters:</p>
+                    <ul class="list-disc pl-5">
+                        <li>user_id: The Meta user ID to be deleted</li>
+                        <li>confirmation_code: A unique code for tracking the deletion request</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="mb-8">
+                <h2 class="text-2xl font-semibold mb-4">Manual Data Deletion Request</h2>
+                <p>
+                    If you prefer to directly request data deletion or have any difficulties with the above methods, 
+                    please contact our Data Protection Officer:
+                </p>
+                <div class="bg-gray-100 p-4 rounded-md">
+                    <p><strong>Email:</strong> dpo@[YOUR-DOMAIN].com</p>
+                    <p><strong>Subject:</strong> Data Deletion Request</p>
+                    <p class="mt-2">Please include:</p>
+                    <ul class="list-disc pl-5">
+                        <li>Your full name</li>
+                        <li>Email address associated with your account</li>
+                        <li>Brief description of the data you wish to have deleted</li>
+                    </ul>
+                </div>
+                <p class="mt-4">
+                    We will respond to your request within 30 days and provide confirmation once the deletion is complete.
+                </p>
+            </section>
+
+            <section class="mb-8">
+                <h2 class="text-2xl font-semibold mb-4">Contact Information</h2>
+                <p>
+                    [COMPANY NAME]<br>
+                    [COMPANY ADDRESS]<br>
+                    Email: privacy@[YOUR-DOMAIN].com<br>
+                    Phone: [YOUR-PHONE]
+                </p>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

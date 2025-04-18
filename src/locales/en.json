@@ -16,5 +16,15 @@
     "connect": "Connect",
     "reconnect": "Reconnect",
     "disconnect": "Disconnect"
+  },
+  "errors": {
+    "meta": {
+      "generic": "There was an error connecting to Meta",
+      "cancelled": "Meta authorization was cancelled",
+      "invalid_scope": "Missing required permissions for Meta",
+      "not_authorized": "Your account doesn't have sufficient permissions for this ad account",
+      "dev_mode": "This app is still in development mode",
+      "rate_limited": "Too many requests. Please try again later"
+    }
   }
 }

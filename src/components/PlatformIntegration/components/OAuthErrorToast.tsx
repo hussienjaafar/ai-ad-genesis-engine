@@ -1,33 +1,68 @@
 
-import React from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
-import { CheckIcon } from 'lucide-react';
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { ExternalLink } from "lucide-react";
+import { useTranslation } from "react-i18next";
+
+interface OAuthErrorOptions {
+  platform: string;
+  errorType: string;
+  errorMessage?: string;
+  onRetry?: () => void;
+}
 
 /**
- * Shows a toast notification for OAuth errors with a retry action
- * @param platform The platform that encountered an error (meta, google)
+ * Shows a toast notification for OAuth errors with a retry button and help link
  */
-export const showOAuthErrorToast = (platform: 'meta' | 'google') => {
-  const { toast } = useToast();
+const showOAuthErrorToast = ({ 
+  platform, 
+  errorType, 
+  errorMessage, 
+  onRetry 
+}: OAuthErrorOptions) => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   
-  // Show toast with retry action
-  toast({
-    title: t('auth.oauthCancelled'),
-    action: (
-      <div 
-        onClick={() => navigate(`/api/oauth/${platform}/init`)} 
-        className="rounded bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground hover:bg-primary/80 cursor-pointer"
+  // Map error types to i18n keys when available
+  const getErrorMessage = () => {
+    // First try platform-specific error
+    const i18nKey = `errors.${platform}.${errorType}`;
+    const i18nMessage = t(i18nKey, { defaultValue: null });
+    
+    if (i18nMessage) return i18nMessage;
+    
+    // Fall back to provided error message
+    if (errorMessage) return `${platform} error: ${errorMessage}`;
+    
+    // Generic fallback
+    return t(`errors.${platform}.generic`, { defaultValue: `There was an error connecting to ${platform}` });
+  };
+
+  const message = getErrorMessage();
+  
+  toast(message, {
+    // Auto-dismiss after 4 seconds
+    duration: 4000,
+    
+    // Add action buttons
+    action: {
+      label: t('common.retry'),
+      onClick: () => {
+        if (onRetry) onRetry();
+      }
+    },
+    
+    // Add help link
+    description: (
+      <a
+        href={`/help/connect-${platform}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-500 hover:text-blue-700 flex items-center gap-1 text-xs mt-1"
       >
-        {t('common.retry')}
-      </div>
-    ),
-    duration: 4000, // 4 seconds
+        Need help? <ExternalLink size={12} />
+      </a>
+    )
   });
 };
 
 export default showOAuthErrorToast;
-

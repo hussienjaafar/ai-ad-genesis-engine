@@ -6,6 +6,7 @@ import BusinessService from '../../services/businessService';
 import { handleOAuthInit, getRedirectUri } from './oauthUtils';
 import { get, del } from '../../lib/redis';
 import pLimit from 'p-limit';
+import alertService from '../../services/alertService';
 
 // Rate limiter for API calls
 const limiter = pLimit(5);
@@ -49,7 +50,7 @@ export class MetaOAuthController {
   static async callback(req: Request, res: Response) {
     try {
       // Verify state parameter
-      const { state, code } = req.query;
+      const { state, code, error, error_reason, error_description } = req.query;
       const sessionId = req.sessionID || '';
       const storedState = await get(`oauth:meta:state:${sessionId}`);
       const fallbackState = req.cookies.oauth_state;
@@ -57,16 +58,24 @@ export class MetaOAuthController {
       
       const validState = storedState || fallbackState;
       
-      if (!state || !validState || state !== validState) {
-        return res.status(400).json({ error: 'Invalid state parameter' });
-      }
-      
-      // Clean up state and cookies
+      // Clean up state in Redis regardless of outcome
       if (storedState) {
         await del(`oauth:meta:state:${sessionId}`);
       }
+      
+      // Clean up cookies
       res.clearCookie('oauth_state');
       res.clearCookie('oauth_business_id');
+      
+      // Handle error from Meta OAuth
+      if (error) {
+        console.error(`Meta OAuth error: ${error}`, { error_reason, error_description });
+        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:8080'}/platforms?error=${error}&error_reason=${error_reason}&error_description=${encodeURIComponent(error_description as string || '')}`);
+      }
+      
+      if (!state || !validState || state !== validState) {
+        return res.status(400).json({ error: 'Invalid state parameter' });
+      }
       
       if (!code) {
         return res.status(400).json({ error: 'Authorization code not provided' });
@@ -121,10 +130,27 @@ export class MetaOAuthController {
         needsReauth: false
       });
       
+      // Alert when a business successfully connects with Meta
+      await alertService.send({
+        level: 'info',
+        message: `Business ${businessId} successfully connected Meta Ad Account ${adAccount.account_id}`,
+        source: 'oauth:meta',
+        businessId,
+        details: {
+          accountName: adAccount.name,
+          expiresAt: expiresAt.toISOString()
+        }
+      });
+      
       res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:8080'}/platforms?success=facebook`);
     } catch (error) {
       console.error('Meta OAuth callback error:', error);
       res.status(500).json({ error: 'Failed to complete Meta OAuth flow' });
     }
   }
+}
+
+function generateSecureRandomString() {
+  const crypto = require('crypto');
+  return crypto.randomBytes(32).toString('hex');
 }

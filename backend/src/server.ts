@@ -7,14 +7,22 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
+import path from 'path';
 import { connectToDatabase } from './lib/mongoose';
 import apiRoutes from './routes';
 import setupSwagger from './lib/swagger';
 import { startTokenRefreshJob } from './jobs/tokenRefreshJob';
+import { startTokenMonitorJob } from './jobs/tokenMonitorJob';
 
 // Validate encryption key
 if (process.env.NODE_ENV === 'production' && (!process.env.OAUTH_ENCRYPTION_KEY || process.env.OAUTH_ENCRYPTION_KEY.length !== 32)) {
   console.error('ERROR: OAUTH_ENCRYPTION_KEY must be exactly 32 characters in length.');
+  process.exit(1);
+}
+
+// Validate PUBLIC_URL in production
+if (process.env.NODE_ENV === 'production' && !process.env.PUBLIC_URL) {
+  console.error('ERROR: PUBLIC_URL environment variable must be set in production.');
   process.exit(1);
 }
 
@@ -33,6 +41,9 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
+
+// Serve static legal pages
+app.use('/legal', express.static(path.join(__dirname, '../public/legal')));
 
 // Setup Swagger docs
 setupSwagger(app);
@@ -64,6 +75,9 @@ if (process.env.NODE_ENV !== 'test') {
       
       // Start token refresh cron job
       startTokenRefreshJob();
+      
+      // Start token expiry monitor job
+      startTokenMonitorJob();
       
       app.listen(port, () => {
         console.log(`Server running on port ${port}`);

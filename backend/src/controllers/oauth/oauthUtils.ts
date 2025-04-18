@@ -19,6 +19,10 @@ export const handleOAuthInit = async (req: Request, sessionId: string, redisKeyP
 };
 
 export const getRedirectUri = (req: Request, platform: string) => {
-  const baseUrl = process.env.API_BASE_URL || `${req.protocol}://${req.get('host')}`;
+  // Use PUBLIC_URL in production, fallback to request-based URL in development
+  const baseUrl = process.env.NODE_ENV === 'production' && process.env.PUBLIC_URL
+    ? process.env.PUBLIC_URL
+    : process.env.API_BASE_URL || `${req.protocol}://${req.get('host')}`;
+    
   return `${baseUrl}/api/oauth/${platform}/callback`;
 };

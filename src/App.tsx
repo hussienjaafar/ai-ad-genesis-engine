@@ -13,6 +13,8 @@ import OAuthCallback from './pages/OAuthCallback';
 import Content from './pages/Content';
 import NotFound from './pages/NotFound';
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
+import Experiments from "./pages/Experiments";
+import ExperimentResults from "./pages/ExperimentResults";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,6 +36,8 @@ function App() {
         <Route path="/oauth/:platform/callback" element={<OAuthCallback />} />
         <Route path="/content/:businessId" element={<Content />} />
         <Route path="/analytics" element={<AnalyticsDashboard />} />
+        <Route path="/businesses/:id/experiments" element={<Experiments />} />
+        <Route path="/experiments/:id" element={<ExperimentResults />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster position="top-right" />

@@ -1,116 +1,74 @@
 
-# Welcome to your Lovable project
+# AI Ad Engine
 
-## Project info
+An AI-powered advertising platform for generating and optimizing ad content.
 
-**URL**: https://lovable.dev/projects/b6b9f7f6-d756-4f72-afe8-a43c50fd2299
+## Features
 
-## Analytics Dashboard
+### Content Generation
+AI-assisted ad copy and creative generation based on business profiles.
 
-The Analytics Dashboard provides comprehensive metrics and insights for your advertising campaigns:
+### Analytics Dashboard
+Track performance metrics for your ads with detailed analytics.
 
-- View key performance indicators like Spend, ROAS, CPL, and CTR
-- Analyze trends with interactive charts
-- Discover pattern insights to optimize your ads
+### Platform Integrations
+Connect to major ad platforms like Facebook and Google Ads.
 
-**Note:** Charts display once at least one day of performance data is ingested.
+### A/B Testing
+Run controlled experiments to optimize your ad performance.
 
-## Insight-Driven Generation
+## A/B Testing
 
-Our platform identifies winning elements from your existing ads and helps you leverage them for new content:
+The platform includes a robust A/B testing system to compare and optimize ad variants:
 
-1. The Analytics Dashboard automatically identifies high-performing patterns in your ad content
-2. Click "Generate Variation" on any insight to create new content based on that winning element
-3. Choose the content type (Facebook, Google, Video) and customize as needed
-4. New content is tagged with the source insight for performance tracking
+### Key Features
+- Compare performance between original content and variants
+- Flexible traffic splitting (50/50, 60/40, etc.)
+- Real-time performance metrics with statistical significance
+- Automatic lift calculation and confidence scoring
 
-This data-driven approach helps improve your marketing ROI by learning from past successes.
+### How It Works
+1. Create an experiment by selecting original and variant content
+2. Set traffic distribution and experiment duration
+3. Traffic is automatically split between variants
+4. Performance metrics are tracked and analyzed
+5. Statistical significance is calculated to validate results
 
-## How can I edit this code?
+### Statistical Analysis
+- The system calculates lift percentage between variants
+- P-value indicates statistical confidence (target: p < 0.05)
+- Results are updated daily to help make informed decisions
 
-There are several ways of editing your application.
+![A/B Testing Flow](path/to/ab-testing-demo.gif)
 
-**Use Lovable**
+### Uplift Measurement
+- Content generated from insights are tracked through the full funnel
+- Performance attribution connects variants back to their source insights
+- This creates a continuous improvement loop driven by real data
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/b6b9f7f6-d756-4f72-afe8-a43c50fd2299) and start prompting.
+## Getting Started
 
-Changes made via Lovable will be committed automatically to this repo.
+### Prerequisites
+- Node.js v14+
+- MongoDB
+- Facebook Developer Account (for Facebook Ads integration)
+- Google Developer Account (for Google Ads integration)
 
-**Use your preferred IDE**
+### Installation
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Set up environment variables (see `.env.example`)
+4. Start the development server: `npm run dev`
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Testing
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Run automated tests: `npm test`
 
-Follow these steps:
+### Test Coverage
+- Unit tests: Jest
+- E2E tests: Cypress
+- Coverage target: ≥80%
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/b6b9f7f6-d756-4f72-afe8-a43c50fd2299) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
-
-## Authentication
-
-This application uses a secure cookie-based authentication system:
-
-### How it works:
-1. Access tokens are short-lived (15 minutes) and stored only in memory
-2. Refresh tokens are long-lived (7 days) and stored as HTTP-only cookies
-3. When the access token expires, the system automatically refreshes it using the cookie
-
-### Using Swagger UI:
-1. Navigate to `/docs` endpoint
-2. Click the "Authorize" button at the top
-3. Under "cookieAuth", the refresh token cookie will be automatically included
-4. Protected endpoints will now work with your authentication
-
-### Security Features:
-- Access tokens are never stored in localStorage
-- Refresh tokens are HttpOnly cookies (not accessible via JavaScript)
-- CORS is configured to allow credentials only from whitelisted origins
-- Rate limiting prevents brute force attempts
+## Notes
+- Charts display once at least one day of performance data is ingested.
+- For best A/B test results, run experiments for at least 14 days.

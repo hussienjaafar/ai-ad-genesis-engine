@@ -1,4 +1,3 @@
-
 import express from 'express';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJSDoc from 'swagger-jsdoc';
@@ -124,6 +123,79 @@ const setupSwagger = (app: express.Application) => {
               },
               createdAt: { type: 'string', format: 'date-time' }
             }
+          },
+          Experiment: {
+            type: 'object',
+            properties: {
+              _id: { type: 'string' },
+              businessId: { type: 'string' },
+              name: { type: 'string' },
+              contentIdOriginal: { type: 'string' },
+              contentIdVariant: { type: 'string' },
+              split: {
+                type: 'object',
+                properties: {
+                  original: { type: 'number' },
+                  variant: { type: 'number' }
+                }
+              },
+              startDate: { type: 'string', format: 'date-time' },
+              endDate: { type: 'string', format: 'date-time' },
+              status: { type: 'string', enum: ['active', 'completed', 'paused'] },
+              createdAt: { type: 'string', format: 'date-time' },
+              updatedAt: { type: 'string', format: 'date-time' }
+            }
+          },
+          ExperimentResult: {
+            type: 'object',
+            properties: {
+              experimentId: { type: 'string' },
+              results: {
+                type: 'object',
+                properties: {
+                  original: {
+                    type: 'object',
+                    properties: {
+                      impressions: { type: 'number' },
+                      clicks: { type: 'number' },
+                      conversions: { type: 'number' },
+                      conversionRate: { type: 'number' }
+                    }
+                  },
+                  variant: {
+                    type: 'object',
+                    properties: {
+                      impressions: { type: 'number' },
+                      clicks: { type: 'number' },
+                      conversions: { type: 'number' },
+                      conversionRate: { type: 'number' }
+                    }
+                  }
+                }
+              },
+              lift: { type: 'number' },
+              pValue: { type: 'number' },
+              isSignificant: { type: 'boolean' },
+              lastUpdated: { type: 'string', format: 'date-time' }
+            }
+          },
+          CreateExperiment: {
+            type: 'object',
+            required: ['name', 'contentIdOriginal', 'contentIdVariant', 'startDate', 'endDate'],
+            properties: {
+              name: { type: 'string' },
+              contentIdOriginal: { type: 'string' },
+              contentIdVariant: { type: 'string' },
+              split: {
+                type: 'object',
+                properties: {
+                  original: { type: 'number', default: 50 },
+                  variant: { type: 'number', default: 50 }
+                }
+              },
+              startDate: { type: 'string', format: 'date-time' },
+              endDate: { type: 'string', format: 'date-time' }
+            }
           }
         }
       },
@@ -189,6 +261,172 @@ const setupSwagger = (app: express.Application) => {
       'application/json': {
         schema: {
           $ref: '#/components/schemas/PerformanceInsights'
+        }
+      }
+    };
+  }
+
+  // Add experiment endpoints documentation
+  if (swaggerSpec.paths) {
+    // Create experiment endpoint
+    swaggerSpec.paths['/businesses/{businessId}/experiments'] = {
+      post: {
+        tags: ['Experiments'],
+        summary: 'Create a new A/B test experiment',
+        description: 'Create a new experiment to compare performance between original and variant content',
+        parameters: [
+          {
+            name: 'businessId',
+            in: 'path',
+            required: true,
+            description: 'ID of the business',
+            schema: { type: 'string' }
+          }
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/CreateExperiment'
+              }
+            }
+          }
+        },
+        responses: {
+          '201': {
+            description: 'Experiment created successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Experiment'
+                }
+              }
+            }
+          },
+          '400': {
+            description: 'Invalid request parameters'
+          }
+        }
+      },
+      get: {
+        tags: ['Experiments'],
+        summary: 'Get all experiments for a business',
+        description: 'Retrieve all A/B test experiments for a specific business',
+        parameters: [
+          {
+            name: 'businessId',
+            in: 'path',
+            required: true,
+            description: 'ID of the business',
+            schema: { type: 'string' }
+          }
+        ],
+        responses: {
+          '200': {
+            description: 'List of experiments',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: {
+                    $ref: '#/components/schemas/Experiment'
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    };
+
+    // Get experiment results endpoint
+    swaggerSpec.paths['/businesses/{businessId}/experiments/{expId}/results'] = {
+      get: {
+        tags: ['Experiments'],
+        summary: 'Get experiment results',
+        description: 'Get performance results and statistical significance for an experiment',
+        parameters: [
+          {
+            name: 'businessId',
+            in: 'path',
+            required: true,
+            description: 'ID of the business',
+            schema: { type: 'string' }
+          },
+          {
+            name: 'expId',
+            in: 'path',
+            required: true,
+            description: 'ID of the experiment',
+            schema: { type: 'string' }
+          }
+        ],
+        responses: {
+          '200': {
+            description: 'Experiment results',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/ExperimentResult'
+                }
+              }
+            }
+          },
+          '404': {
+            description: 'Experiment or results not found'
+          }
+        }
+      }
+    };
+
+    // Update experiment status endpoint
+    swaggerSpec.paths['/experiments/{id}/status'] = {
+      patch: {
+        tags: ['Experiments'],
+        summary: 'Update experiment status',
+        description: 'Change the status of an experiment (active, paused, completed)',
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            description: 'ID of the experiment',
+            schema: { type: 'string' }
+          }
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['status'],
+                properties: {
+                  status: {
+                    type: 'string',
+                    enum: ['active', 'paused', 'completed']
+                  }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'Experiment updated successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Experiment'
+                }
+              }
+            }
+          },
+          '400': {
+            description: 'Invalid status'
+          },
+          '404': {
+            description: 'Experiment not found'
+          }
         }
       }
     };

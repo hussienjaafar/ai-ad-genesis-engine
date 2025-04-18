@@ -8,6 +8,8 @@ import prom from 'prom-client';
 import pLimit from 'p-limit';
 import mongoose from 'mongoose';
 import ContentModel from '../models/Content';
+import ExperimentModel from '../models/Experiment';
+import experimentService from '../services/experimentService';
 
 // Alert service import for notification
 import alertService from '../services/alertService';
@@ -228,6 +230,16 @@ function processAdPerformance(data: any[], platform: string, businessId: string,
       // Check if this ad has associated content with insight
       const contentInfo = contentMap.get(item.ad_id);
       const generatedFromInsightId = contentInfo?.generatedFromInsightId;
+      const contentId = contentInfo?.contentId;
+
+      // Check if this content is part of an active experiment
+      let experimentInfo = null;
+      if (contentInfo?.experimentInfo) {
+        experimentInfo = {
+          experimentId: contentInfo.experimentInfo.experimentId,
+          variant: contentInfo.experimentInfo.variant
+        };
+      }
       
       return {
         businessId,
@@ -242,7 +254,10 @@ function processAdPerformance(data: any[], platform: string, businessId: string,
         },
         // Add the insight ID if available
         generatedFromInsightId: generatedFromInsightId || null,
-        contentId: contentInfo?.contentId || null
+        contentId: contentId || null,
+        // Add experiment data if available
+        experimentId: experimentInfo?.experimentId || null,
+        variant: experimentInfo?.variant || null
       };
     });
   }
@@ -252,7 +267,7 @@ function processAdPerformance(data: any[], platform: string, businessId: string,
 }
 
 /**
- * Get content to ad mappings, including insight source information
+ * Get content to ad mappings, including insight source and experiment information
  */
 async function getContentAdMappings(businessId: string): Promise<Map<string, any>> {
   try {
@@ -262,13 +277,38 @@ async function getContentAdMappings(businessId: string): Promise<Map<string, any
       'metadata.adId': { $exists: true }
     }).lean();
     
+    // Find active experiments for this business
+    const activeExperiments = await ExperimentModel.find({
+      businessId: new mongoose.Types.ObjectId(businessId),
+      status: 'active',
+      startDate: { $lte: new Date() },
+      endDate: { $gte: new Date() }
+    }).lean();
+
+    // Create mapping of contentIds to their experiment info
+    const experimentMapping = new Map();
+    for (const experiment of activeExperiments) {
+      experimentMapping.set(experiment.contentIdOriginal, {
+        experimentId: experiment._id.toString(),
+        variant: 'original'
+      });
+      experimentMapping.set(experiment.contentIdVariant, {
+        experimentId: experiment._id.toString(),
+        variant: 'variant'
+      });
+    }
+    
     const contentMap = new Map();
     
     for (const content of contentItems) {
       if (content.metadata?.adId) {
+        const contentId = content._id.toString();
+        const experimentInfo = experimentMapping.get(contentId) || null;
+        
         contentMap.set(content.metadata.adId, {
-          contentId: content._id.toString(),
-          generatedFromInsightId: content.generatedFrom?.insightId?.toString() || null
+          contentId,
+          generatedFromInsightId: content.generatedFrom?.insightId?.toString() || null,
+          experimentInfo
         });
       }
     }
@@ -277,6 +317,41 @@ async function getContentAdMappings(businessId: string): Promise<Map<string, any
   } catch (error) {
     console.error('Error getting content-ad mappings:', error);
     return new Map();
+  }
+}
+
+/**
+ * Run experiment result updates after ETL job completes
+ */
+async function updateExperimentResults() {
+  try {
+    // Find all active experiments
+    const activeExperiments = await ExperimentModel.find({
+      status: 'active',
+      startDate: { $lte: new Date() }
+    });
+    
+    console.log(`Updating results for ${activeExperiments.length} active experiments`);
+    
+    for (const experiment of activeExperiments) {
+      try {
+        await experimentService.computeResults(experiment._id.toString());
+        console.log(`Updated results for experiment ${experiment._id}`);
+        
+        // If experiment has ended, mark it as completed
+        if (experiment.endDate < new Date()) {
+          await ExperimentModel.findByIdAndUpdate(
+            experiment._id,
+            { status: 'completed' }
+          );
+          console.log(`Experiment ${experiment._id} marked as completed (end date reached)`);
+        }
+      } catch (error) {
+        console.error(`Error updating results for experiment ${experiment._id}:`, error);
+      }
+    }
+  } catch (error) {
+    console.error('Error updating experiment results:', error);
   }
 }
 
@@ -315,7 +390,7 @@ async function runEtl() {
       const businessId = business._id.toString();
       const allPerformanceData = [];
       
-      // Get content to ad mappings for this business to attach insight IDs
+      // Get content to ad mappings for this business to attach insight IDs and experiment data
       const contentAdMap = await getContentAdMappings(businessId);
       
       // Process Meta/Facebook data if connected
@@ -407,6 +482,10 @@ async function runEtl() {
     }
     
     await client.close();
+    
+    // After ETL job completes, update experiment results
+    await updateExperimentResults();
+    
     console.log('ETL job completed successfully');
   } catch (error) {
     console.error('ETL job failed:', error);

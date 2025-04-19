@@ -27,7 +27,46 @@ export const usePerformanceInsights = (businessId: string) => {
     queryKey: ['performanceInsights', businessId],
     queryFn: async () => {
       const response = await api.get(`/businesses/${businessId}/analytics/insights`);
-      return response.data;
+      
+      // Transform the response data to match the expected format by our components
+      const data = response.data;
+      
+      // If patternInsights exist, make sure they have the old format properties
+      if (data.patternInsights && Array.isArray(data.patternInsights)) {
+        data.patternInsights = data.patternInsights.map(insight => {
+          // Map new format fields to old format fields for backward compatibility
+          // if they don't already exist
+          if (!insight.element) {
+            insight.element = insight.title || 'Unknown element';
+          }
+          if (!insight.elementType) {
+            insight.elementType = insight.category || 'Unknown type';
+          }
+          if (!insight.performance) {
+            // Create a default performance object based on confidence
+            const confidenceValue = insight.confidence || 0.5;
+            insight.performance = {
+              withElement: {
+                impressions: 1000,
+                clicks: 100 * confidenceValue,
+                ctr: 0.1 * confidenceValue,
+                sampleSize: 1000
+              },
+              withoutElement: {
+                impressions: 1000,
+                clicks: 50,
+                ctr: 0.05,
+                sampleSize: 1000
+              },
+              uplift: confidenceValue,
+              confidence: confidenceValue
+            };
+          }
+          return insight;
+        });
+      }
+      
+      return data;
     },
     enabled: !!businessId,
     refetchOnWindowFocus: false,

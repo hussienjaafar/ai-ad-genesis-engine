@@ -49,9 +49,32 @@ export interface PatternInsight {
   tags: string[];
   metadata?: Record<string, any>;
   createdAt: string;
+  
+  // Adding back the old properties for backward compatibility
+  element: string;
+  elementType: string;
+  performance: {
+    withElement: {
+      impressions: number;
+      clicks: number;
+      ctr: number;
+      sampleSize: number;
+    };
+    withoutElement: {
+      impressions: number;
+      clicks: number;
+      ctr: number;
+      sampleSize: number;
+    };
+    uplift: number;
+    confidence: number;
+  };
 }
 
 export interface InsightData {
   patternInsights: PatternInsight[];
   lastUpdated?: string;
 }
+
+// For backwards compatibility with PerformanceChart component
+export type DailyPerformance = DailyMetric;

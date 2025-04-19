@@ -25,3 +25,4 @@ router.get('/:id/chat-sessions/:sessionId', authorize, ChatController.getChatSes
 router.get('/:id/chat-sessions', authorize, ChatController.getChatSessionsForBusiness);
 
 export default router;
+

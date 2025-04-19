@@ -35,7 +35,7 @@ export default function AnalyticsDashboard() {
   const isLoading = isLoadingMetrics || isLoadingInsights;
   const lastUpdated = performanceData?.lastUpdated || null;
   const kpis = performanceData?.kpis || null;
-  const patternInsights = insights?.patternInsights || []; // Use patternInsights instead of patterns
+  const patternInsights = insights?.patternInsights || []; 
 
   if (!businessId) {
     return (

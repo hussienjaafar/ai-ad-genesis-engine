@@ -53,7 +53,7 @@ const PerformanceMetrics = ({ isLoading, error, performanceData }: PerformanceMe
     clicks: 0,
     spend: 0,
     leads: 0,
-    ctr: 0 // Add the ctr property
+    ctr: 0
   };
 
   const metrics: PerformanceMetric[] = [

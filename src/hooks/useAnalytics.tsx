@@ -53,7 +53,7 @@ export const useAnalytics = (businessId: string) => {
     kpis: performanceData?.kpis || null,
     performanceData: performanceData?.daily || [],
     insights: insights || null,
-    patternInsights: insights?.patternInsights || [], // Fix: use patternInsights instead of patterns
+    patternInsights: insights?.patternInsights || [],
     lastUpdated: performanceData?.lastUpdated || null, 
     isLoading
   };

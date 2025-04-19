@@ -32,7 +32,7 @@ export function useChat(businessId: string) {
   const queryClient = useQueryClient();
 
   // Create a new chat session
-  const createChatSession = useMutation({
+  const createChatSessionMutation = useMutation({
     mutationFn: async (params: NewSessionParams): Promise<ChatSession> => {
       const response = await api.post(`/businesses/${businessId}/chat-sessions`, params);
       return response.data as ChatSession;
@@ -46,7 +46,7 @@ export function useChat(businessId: string) {
   });
 
   // Send a message in a chat session
-  const sendMessage = useMutation({
+  const sendMessageMutation = useMutation({
     mutationFn: async ({ sessionId, message }: { sessionId: string; message: string }): Promise<ChatMessage> => {
       const response = await api.post(
         `/businesses/${businessId}/chat-sessions/${sessionId}/message`,
@@ -85,9 +85,9 @@ export function useChat(businessId: string) {
         return response.data as ChatSession;
       },
       enabled: !!businessId && !!sessionId,
-      refetchInterval: (data) => {
+      refetchInterval: (data: ChatSession | undefined) => {
         // If we're actively chatting, poll more frequently
-        if (data && data.history && data.history.length) {
+        if (data && data.history && data.history.length > 0) {
           const lastMessageTime = new Date(data.history[data.history.length - 1].timestamp).getTime();
           const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
           return lastMessageTime > fiveMinutesAgo ? 3000 : false;
@@ -98,10 +98,10 @@ export function useChat(businessId: string) {
   };
 
   return {
-    createChatSession: createChatSession.mutate,
-    isCreatingSession: createChatSession.isPending,
-    sendMessage: sendMessage.mutate,
-    isSendingMessage: sendMessage.isPending,
+    createChatSession: (params: NewSessionParams) => createChatSessionMutation.mutateAsync(params),
+    isCreatingSession: createChatSessionMutation.isPending,
+    sendMessage: (params: { sessionId: string; message: string }) => sendMessageMutation.mutateAsync(params),
+    isSendingMessage: sendMessageMutation.isPending,
     getChatSessions,
     getChatSession,
   };

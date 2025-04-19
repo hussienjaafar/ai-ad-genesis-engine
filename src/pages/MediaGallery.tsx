@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { useMediaAssets, useTriggerMediaRetrieval, MediaAsset } from '@/hooks/useMedia';
+import { useMediaAssets, useTriggerMediaRetrieval, MediaAsset, MediaFilterOptions } from '@/hooks/useMedia';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Pagination } from '@/components/ui/pagination';
 import MediaDetailModal from '@/components/Media/MediaDetailModal';
@@ -17,14 +17,14 @@ import { Search, RotateCw } from 'lucide-react';
 
 const MediaGallery = () => {
   const { id: businessId } = useParams<{ id: string }>();
-  const [filters, setFilters] = useState({
-    type: '' as '' | 'video' | 'image',
+  const [filters, setFilters] = useState<MediaFilterOptions>({
+    type: '',
     platform: '',
-    status: '' as '' | 'pending' | 'processing' | 'complete' | 'failed',
+    status: '',
     page: 1,
     limit: 20,
     sortBy: 'createdAt',
-    sortOrder: 'desc' as const,
+    sortOrder: 'desc',
   });
   
   const [selectedAsset, setSelectedAsset] = useState<MediaAsset | null>(null);

@@ -18,9 +18,9 @@ import { Search, RotateCw } from 'lucide-react';
 const MediaGallery = () => {
   const { id: businessId } = useParams<{ id: string }>();
   const [filters, setFilters] = useState<MediaFilterOptions>({
-    type: '',
-    platform: '',
-    status: '',
+    type: 'all',
+    platform: 'all',
+    status: 'all',
     page: 1,
     limit: 20,
     sortBy: 'createdAt',
@@ -132,7 +132,7 @@ const MediaGallery = () => {
                       <SelectValue placeholder="All Types" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Types</SelectItem>
+                      <SelectItem value="all">All Types</SelectItem>
                       {typeOptions.map(option => (
                         <SelectItem key={option.value} value={option.value}>
                           {option.label}
@@ -151,7 +151,7 @@ const MediaGallery = () => {
                       <SelectValue placeholder="All Platforms" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Platforms</SelectItem>
+                      <SelectItem value="all">All Platforms</SelectItem>
                       {platformOptions.map(option => (
                         <SelectItem key={option.value} value={option.value}>
                           {option.label}
@@ -170,7 +170,7 @@ const MediaGallery = () => {
                       <SelectValue placeholder="All Statuses" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Statuses</SelectItem>
+                      <SelectItem value="all">All Statuses</SelectItem>
                       {statusOptions.map(option => (
                         <SelectItem key={option.value} value={option.value}>
                           {option.label}

@@ -51,9 +51,9 @@ export interface MediaListResponse {
 }
 
 export interface MediaFilterOptions {
-  type?: 'video' | 'image' | '';
+  type?: 'video' | 'image' | 'all' | '';
   platform?: string;
-  status?: 'pending' | 'processing' | 'complete' | 'failed' | '';
+  status?: 'pending' | 'processing' | 'complete' | 'failed' | 'all' | '';
   page?: number;
   limit?: number;
   sortBy?: string;
@@ -67,15 +67,15 @@ export const useMediaAssets = (
   businessId: string,
   options: MediaFilterOptions = {}
 ) => {
-  const { type, platform, status, page = 1, limit = 20, sortBy = 'createdAt', sortOrder = 'desc' } = options;
+  const { type = 'all', platform = 'all', status = 'all', page = 1, limit = 20, sortBy = 'createdAt', sortOrder = 'desc' } = options;
   
   return useQuery<MediaListResponse>({
     queryKey: ['mediaAssets', businessId, { type, platform, status, page, limit, sortBy, sortOrder }],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (type) params.append('type', type);
-      if (platform) params.append('platform', platform);
-      if (status) params.append('status', status);
+      if (type && type !== 'all') params.append('type', type);
+      if (platform && platform !== 'all') params.append('platform', platform);
+      if (status && status !== 'all') params.append('status', status);
       params.append('page', String(page));
       params.append('limit', String(limit));
       params.append('sortBy', sortBy);

@@ -1,11 +1,12 @@
 
 import { Button } from "@/components/ui/button";
 import { HelpCircleIcon, BellIcon } from "lucide-react";
+import { ReactNode } from "react";
 
 interface PageHeaderProps {
   title: string;
   description: string;
-  actions?: React.ReactNode;
+  actions?: ReactNode;
 }
 
 const PageHeader = ({ title, description, actions }: PageHeaderProps) => {

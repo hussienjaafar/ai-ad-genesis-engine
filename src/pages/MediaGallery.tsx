@@ -18,9 +18,9 @@ import { Search, RotateCw } from 'lucide-react';
 const MediaGallery = () => {
   const { id: businessId } = useParams<{ id: string }>();
   const [filters, setFilters] = useState({
-    type: '',
+    type: '' as '' | 'video' | 'image',
     platform: '',
-    status: '',
+    status: '' as '' | 'pending' | 'processing' | 'complete' | 'failed',
     page: 1,
     limit: 20,
     sortBy: 'createdAt',
@@ -101,15 +101,16 @@ const MediaGallery = () => {
       <PageHeader 
         title="Media Gallery" 
         description="View and analyze your media assets from connected platforms"
-      >
-        <Button 
-          onClick={() => handleRetrieveMedia()} 
-          disabled={isRetrieving}
-        >
-          <RotateCw className={`mr-2 h-4 w-4 ${isRetrieving ? 'animate-spin' : ''}`} />
-          {isRetrieving ? 'Retrieving...' : 'Retrieve Media'}
-        </Button>
-      </PageHeader>
+        actions={
+          <Button 
+            onClick={() => handleRetrieveMedia()} 
+            disabled={isRetrieving}
+          >
+            <RotateCw className={`mr-2 h-4 w-4 ${isRetrieving ? 'animate-spin' : ''}`} />
+            {isRetrieving ? 'Retrieving...' : 'Retrieve Media'}
+          </Button>
+        }
+      />
       
       <Tabs defaultValue="gallery" className="space-y-6">
         <TabsList>
@@ -240,7 +241,7 @@ const MediaGallery = () => {
             <Card>
               <CardContent className="py-8 text-center">
                 <p className="text-red-500 mb-2">Error loading media assets</p>
-                <p className="text-sm text-muted-foreground">{error as string}</p>
+                <p className="text-sm text-muted-foreground">{error instanceof Error ? error.message : String(error)}</p>
                 <Button variant="outline" className="mt-4" onClick={() => refetch()}>Try Again</Button>
               </CardContent>
             </Card>

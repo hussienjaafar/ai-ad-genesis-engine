@@ -50,20 +50,22 @@ export interface MediaListResponse {
   };
 }
 
+export interface MediaFilterOptions {
+  type?: 'video' | 'image' | '';
+  platform?: string;
+  status?: 'pending' | 'processing' | 'complete' | 'failed' | '';
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
 /**
  * Hook to fetch media assets for a business
  */
 export const useMediaAssets = (
   businessId: string,
-  options: {
-    type?: 'video' | 'image';
-    platform?: string;
-    status?: 'pending' | 'processing' | 'complete' | 'failed';
-    page?: number;
-    limit?: number;
-    sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
-  } = {}
+  options: MediaFilterOptions = {}
 ) => {
   const { type, platform, status, page = 1, limit = 20, sortBy = 'createdAt', sortOrder = 'desc' } = options;
   

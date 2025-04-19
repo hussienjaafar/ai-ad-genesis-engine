@@ -37,7 +37,7 @@ const MediaDetailModal = ({ asset, open, onClose }: MediaDetailModalProps) => {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {asset.metadata.name || asset.assetId}
-            <Badge variant={asset.processingStatus === 'complete' ? 'success' : 
+            <Badge variant={asset.processingStatus === 'complete' ? 'default' : 
                            asset.processingStatus === 'failed' ? 'destructive' : 'secondary'}>
               {asset.processingStatus}
             </Badge>
@@ -187,7 +187,7 @@ const MediaDetailModal = ({ asset, open, onClose }: MediaDetailModalProps) => {
                         <div>
                           <h4 className="text-sm font-medium mb-2">Sentiment</h4>
                           <Badge variant={
-                            asset.toneAnalysis.sentiment === 'positive' ? 'success' :
+                            asset.toneAnalysis.sentiment === 'positive' ? 'default' :
                             asset.toneAnalysis.sentiment === 'negative' ? 'destructive' :
                             'secondary'
                           }>

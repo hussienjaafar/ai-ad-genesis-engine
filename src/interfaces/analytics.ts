@@ -1,80 +1,57 @@
 
-// No need for mongoose import at the TypeScript interface level
-// Using plain TypeScript interfaces instead
-
-export interface DailyPerformance {
+export interface DailyMetric {
   date: string;
   impressions: number;
   clicks: number;
   spend: number;
-  leads: number;
   ctr: number;
   cpc: number;
-  cpl: number;
   conversions?: number;
+  costPerConversion?: number;
+}
+
+export interface KPI {
+  name: string;
+  value: number;
+  change: number;
+  trend: 'up' | 'down' | 'neutral';
+  isPositive: boolean;
 }
 
 export interface PerformanceMetrics {
   kpis: {
-    spend: number;
-    roas: number;
-    ctr: number;
-    cpl: number;
-    cpc?: number;
-    impressions?: number;
-    clicks?: number;
-    conversions?: number;
+    impressions?: KPI;
+    clicks?: KPI;
+    ctr?: KPI;
+    spend?: KPI;
+    conversions?: KPI;
+    costPerConversion?: KPI;
   };
-  totals?: {
-    spend: number;
+  daily: DailyMetric[];
+  totals: {
     impressions: number;
     clicks: number;
-    leads: number;
+    spend: number;
     ctr: number;
-    conversions?: number;
+    leads?: number;
   };
-  daily: DailyPerformance[];
-  lastUpdated?: string; // Add lastUpdated field to match actual data structure
+  lastUpdated: string; // ISO date string of when data was last updated
 }
 
 export interface PatternInsight {
-  _id?: string;
-  element: string;
-  elementType: string;
-  performance: {
-    withElement: {
-      impressions: number;
-      clicks: number;
-      ctr: number;
-      sampleSize: number;
-    };
-    withoutElement: {
-      impressions: number;
-      clicks: number;
-      ctr: number;
-      sampleSize: number;
-    };
-    uplift: number;
-    confidence: number;
-  };
+  _id: string;
+  title: string;
+  description: string;
+  impact: 'high' | 'medium' | 'low';
+  type: 'opportunity' | 'issue' | 'information';
+  category: string;
+  confidence: number;
+  tags: string[];
+  metadata?: Record<string, any>;
+  createdAt: string;
 }
 
 export interface InsightData {
   patternInsights: PatternInsight[];
-  businessId: string;
-  createdAt: string;
-}
-
-// Add DailyMetric to fix the error in PerformanceChart.tsx
-export interface DailyMetric {
-  date: string;
-  impressions?: number;
-  clicks?: number;
-  conversions?: number;
-  spend?: number;
-  ctr?: number;
-  cpc?: number;
-  cpl?: number;
-  roas?: number;
-  // Make all properties optional to be safe
+  lastUpdated?: string;
 }

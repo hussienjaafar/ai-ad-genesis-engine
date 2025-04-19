@@ -1,6 +1,6 @@
 
 import express from 'express';
-import ChatController from '../controllers/chatController';
+import ChatController from '../controllers/chat';
 import authorize from '../middleware/auth';
 
 const router = express.Router();
@@ -25,4 +25,3 @@ router.get('/:id/chat-sessions/:sessionId', authorize, ChatController.getChatSes
 router.get('/:id/chat-sessions', authorize, ChatController.getChatSessionsForBusiness);
 
 export default router;
-

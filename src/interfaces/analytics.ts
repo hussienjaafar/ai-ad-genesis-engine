@@ -30,7 +30,7 @@ export interface PerformanceMetrics {
     impressions: number;
     clicks: number;
     leads: number;
-    ctr: number; // Adding the missing ctr property
+    ctr: number;
     conversions?: number;
   };
   daily: DailyPerformance[];

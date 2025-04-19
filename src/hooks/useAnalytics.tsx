@@ -53,8 +53,8 @@ export const useAnalytics = (businessId: string) => {
     kpis: performanceData?.kpis || null,
     performanceData: performanceData?.daily || [],
     insights: insights || null,
-    patterns: insights?.patternInsights || [], // Fix: use patternInsights instead of patterns
-    lastUpdated: performanceData?.lastUpdated || null, // This might need to be added to the PerformanceMetrics interface
+    patternInsights: insights?.patternInsights || [], // Fix: use patternInsights instead of patterns
+    lastUpdated: performanceData?.lastUpdated || null, 
     isLoading
   };
 };

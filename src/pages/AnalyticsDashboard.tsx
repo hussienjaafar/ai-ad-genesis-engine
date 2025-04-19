@@ -35,7 +35,7 @@ export default function AnalyticsDashboard() {
   const isLoading = isLoadingMetrics || isLoadingInsights;
   const lastUpdated = performanceData?.lastUpdated || null;
   const kpis = performanceData?.kpis || null;
-  const patterns = insights?.patternInsights || []; // Use patternInsights instead of patterns
+  const patternInsights = insights?.patternInsights || []; // Use patternInsights instead of patterns
 
   if (!businessId) {
     return (
@@ -114,7 +114,7 @@ export default function AnalyticsDashboard() {
                 insightsData={insights} 
               />
               <TopPatternsTable 
-                insights={insights?.patternInsights || []} 
+                insights={patternInsights} 
               />
             </div>
             

@@ -37,8 +37,10 @@ const CreateChatSessionDialog = ({
         contentType,
       });
       
-      onOpenChange(false);
-      navigate(`/businesses/${businessId}/chat/${session.sessionId}`);
+      if (session && session.sessionId) {
+        onOpenChange(false);
+        navigate(`/businesses/${businessId}/chat/${session.sessionId}`);
+      }
     } catch (error) {
       console.error('Failed to create chat session', error);
     }

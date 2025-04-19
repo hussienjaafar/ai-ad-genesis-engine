@@ -33,7 +33,7 @@ export function useChat(businessId: string) {
 
   // Create a new chat session
   const createChatSession = useMutation({
-    mutationFn: async (params: NewSessionParams) => {
+    mutationFn: async (params: NewSessionParams): Promise<ChatSession> => {
       const response = await api.post(`/businesses/${businessId}/chat-sessions`, params);
       return response.data as ChatSession;
     },
@@ -47,7 +47,7 @@ export function useChat(businessId: string) {
 
   // Send a message in a chat session
   const sendMessage = useMutation({
-    mutationFn: async ({ sessionId, message }: { sessionId: string; message: string }) => {
+    mutationFn: async ({ sessionId, message }: { sessionId: string; message: string }): Promise<ChatMessage> => {
       const response = await api.post(
         `/businesses/${businessId}/chat-sessions/${sessionId}/message`,
         { message }
@@ -87,12 +87,12 @@ export function useChat(businessId: string) {
       enabled: !!businessId && !!sessionId,
       refetchInterval: (data) => {
         // If we're actively chatting, poll more frequently
-        const lastMessageTime = data?.history?.length 
-          ? new Date(data.history[data.history.length - 1].timestamp).getTime()
-          : 0;
-        const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
-        
-        return lastMessageTime > fiveMinutesAgo ? 3000 : false;
+        if (data && data.history && data.history.length) {
+          const lastMessageTime = new Date(data.history[data.history.length - 1].timestamp).getTime();
+          const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+          return lastMessageTime > fiveMinutesAgo ? 3000 : false;
+        }
+        return false;
       },
     });
   };

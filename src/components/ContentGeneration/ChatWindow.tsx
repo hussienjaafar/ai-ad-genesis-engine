@@ -46,7 +46,7 @@ const ChatWindow = ({ sessionId, onNewMessage }: ChatWindowProps) => {
     try {
       const response = await sendMessage({ sessionId, message: messageText });
       setMessageText('');
-      if (onNewMessage) {
+      if (onNewMessage && response) {
         onNewMessage(response);
       }
     } catch (error) {

@@ -3,6 +3,7 @@ import express from 'express';
 import authRoutes from './auth';
 import businessRoutes from './business';
 import contentRoutes from './content';
+import chatRoutes from './chat';
 import oauthRoutes from './oauth';
 import analyticsRoutes from './analytics';
 import experimentRoutes from './experiments';
@@ -18,6 +19,7 @@ router.use('/auth', authRoutes);
 // Apply business ownership middleware to all business-scoped routes
 router.use('/businesses/:businessId', authorize, verifyBusinessOwnership);
 router.use('/businesses', businessRoutes);
+router.use('/businesses', chatRoutes);
 
 // Apply authorization to all content routes
 router.use('/content', authorize, contentRoutes);

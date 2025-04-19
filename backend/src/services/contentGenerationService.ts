@@ -1,4 +1,3 @@
-
 import { Types } from 'mongoose';
 import ContentModel, { IContent } from '../models/Content';
 import BusinessModel from '../models/Business';
@@ -242,6 +241,48 @@ Please incorporate the essence or style of this high-performing element into the
     }
     
     return ContentModel.findOne({ _id: id, isDeleted: false });
+  }
+
+  /**
+   * Add a revision to existing content
+   */
+  public static async addContentRevision(
+    contentId: string,
+    revision: string,
+    sessionId: string
+  ): Promise<IContent> {
+    if (!Types.ObjectId.isValid(contentId)) {
+      throw new Error('Invalid content ID');
+    }
+
+    const content = await ContentModel.findById(contentId);
+    if (!content) {
+      throw new Error('Content not found');
+    }
+
+    // Parse the revision
+    let parsedRevision;
+    try {
+      // First try to parse as JSON
+      parsedRevision = JSON.parse(revision);
+    } catch (e) {
+      // If not valid JSON, use the content type specific parsers
+      parsedRevision = this.parseResponse(content.contentType, revision);
+    }
+
+    // Add revision to the content's revisions array (create if doesn't exist)
+    if (!content.revisions) {
+      content.revisions = [];
+    }
+
+    content.revisions.push({
+      revisionContent: parsedRevision,
+      timestamp: new Date(),
+      sessionId,
+      rawContent: revision
+    });
+
+    return content.save();
   }
 }
 

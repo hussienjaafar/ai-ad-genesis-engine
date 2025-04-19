@@ -85,7 +85,10 @@ export function useChat(businessId: string) {
         return response.data as ChatSession;
       },
       enabled: !!businessId && !!sessionId,
-      refetchInterval: (data: ChatSession | undefined) => {
+      refetchInterval: (query) => {
+        // Get the data from the query object
+        const data = query.state.data as ChatSession | undefined;
+        
         // If we're actively chatting, poll more frequently
         if (data && data.history && data.history.length > 0) {
           const lastMessageTime = new Date(data.history[data.history.length - 1].timestamp).getTime();

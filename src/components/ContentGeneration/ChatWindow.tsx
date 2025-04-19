@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -32,10 +33,10 @@ const ChatWindow = ({ sessionId, onNewMessage }: ChatWindowProps) => {
 
   const { data: chatSession, isLoading: isLoadingSession } = getChatSession(sessionId);
   
-  // If the chat session has a media ID, fetch the media
+  // Update the useMediaAsset hook call to include the correct parameters
   const { data: mediaAsset } = useMediaAsset(
-    businessId!,
-    chatSession?.mediaId as string, 
+    businessId!, 
+    chatSession?.mediaId ?? '',
     { enabled: !!chatSession?.mediaId }
   );
 

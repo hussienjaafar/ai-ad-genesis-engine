@@ -1,4 +1,3 @@
-
 import { useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -38,11 +37,13 @@ const MessageInput = ({ messageText, onChange, onSend, isSending }: MessageInput
         placeholder="Type your message..."
         className="min-h-[60px] resize-none"
         disabled={isSending}
+        data-cy="chat-input"
       />
       <Button 
         onClick={onSend} 
         disabled={isSending || !messageText.trim()} 
         className="self-end"
+        data-cy="send-message"
       >
         {isSending ? 
           <Loader2 className="h-4 w-4 animate-spin" /> : 

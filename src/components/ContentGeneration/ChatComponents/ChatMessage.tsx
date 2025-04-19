@@ -1,4 +1,3 @@
-
 import { ChatMessage as ChatMessageType } from '@/hooks/useChat';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
@@ -9,9 +8,10 @@ interface ChatMessageProps {
 
 const ChatMessage = ({ message }: ChatMessageProps) => {
   return (
-    <div className={`flex gap-3 ${
-      message.role === 'user' ? 'justify-end' : ''
-    }`}>
+    <div 
+      className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : ''}`}
+      data-cy={`chat-message-${message.role}`}
+    >
       {message.role !== 'user' && (
         <Avatar className="h-8 w-8">
           <AvatarFallback className="bg-primary text-primary-foreground text-xs">

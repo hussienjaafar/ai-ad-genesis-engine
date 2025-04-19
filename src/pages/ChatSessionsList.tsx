@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import MainLayout from '@/components/Layout/MainLayout';
@@ -87,13 +86,12 @@ const ChatSessionsList = () => {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {data?.sessions.map((session) => {
-                  // Get the latest non-system message
                   const latestMessage = [...session.history]
                     .filter(msg => msg.role !== 'system')
                     .pop();
                   
                   return (
-                    <Card key={session.sessionId} className="overflow-hidden">
+                    <Card key={session.sessionId} className="overflow-hidden" data-cy="chat-session-card">
                       <CardHeader className="p-4">
                         <div className="flex justify-between items-center">
                           <CardTitle className="text-lg">
@@ -126,6 +124,7 @@ const ChatSessionsList = () => {
                           variant="secondary"
                           size="sm"
                           asChild
+                          data-cy="continue-chat"
                         >
                           <Link to={`/businesses/${businessId}/chat/${session.sessionId}`}>
                             Continue
@@ -137,7 +136,6 @@ const ChatSessionsList = () => {
                 })}
               </div>
               
-              {/* Pagination */}
               {data && data.pages > 1 && (
                 <div className="flex justify-center mt-6">
                   <Pagination

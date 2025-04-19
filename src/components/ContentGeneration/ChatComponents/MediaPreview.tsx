@@ -21,4 +21,3 @@ const MediaPreview = ({ mediaAsset }: MediaPreviewProps) => {
 };
 
 export default MediaPreview;
-

@@ -17,6 +17,9 @@ Connect to major ad platforms like Facebook and Google Ads.
 ### A/B Testing
 Run controlled experiments to optimize your ad performance.
 
+### Media Asset Management
+Retrieve, analyze, and leverage video and image assets from connected ad platforms.
+
 ## Security & Ownership Checks
 
 The platform implements a comprehensive security model to protect user data:
@@ -75,6 +78,53 @@ The platform uses rigorous statistical methods for insights and experiment evalu
 - Statistically significant insights (p < 0.05)
 - Dimensionality reduction to identify key performance drivers
 
+## Media Ingestion & Processing
+
+### Architecture
+The platform implements a scalable, platform-agnostic media ingestion and processing subsystem:
+
+1. **Retrieval Connectors**:
+   - Connects to Meta (Facebook) and Google Ads to fetch video and image assets
+   - Stores metadata in a unified MediaAsset MongoDB collection
+   - Extensible to more platforms (TikTok, LinkedIn) through the same interface
+
+2. **Processing Pipeline**:
+   - Transcribes audio from video assets (AWS Transcribe)
+   - Detects text and objects in images (AWS Rekognition)
+   - Analyzes tone and sentiment in transcribed content (AWS Comprehend/OpenAI)
+
+3. **Asynchronous Processing**:
+   - Distributed job queues using BullMQ
+   - Resilient to failures with automatic retries
+   - Parallel processing across businesses and assets
+
+### Media Gallery
+The platform provides a comprehensive media management UI:
+
+- Filterable gallery of all media assets
+- Detailed view of assets, transcripts, and analysis results
+- Status tracking for media processing
+
+### Setting Up Media Processing
+
+#### AWS Services Configuration
+To use the media processing features, set the following environment variables:
+
+```
+AWS_ACCESS_KEY_ID=your_access_key
+AWS_SECRET_ACCESS_KEY=your_secret_key
+AWS_REGION=us-east-1
+AWS_S3_BUCKET=your-media-assets-bucket
+```
+
+#### Optional OpenAI Configuration
+For enhanced tone analysis:
+
+```
+USE_AWS_COMPREHEND=false
+OPENAI_API_KEY=your_openai_key
+```
+
 ## Uplift Measurement
 - Content generated from insights are tracked through the full funnel
 - Performance attribution connects variants back to their source insights
@@ -107,3 +157,4 @@ Run automated tests: `npm test`
 ## Notes
 - Charts display once at least one day of performance data is ingested.
 - For best A/B test results, run experiments for at least 14 days.
+

@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -33,11 +32,9 @@ const ChatWindow = ({ sessionId, onNewMessage }: ChatWindowProps) => {
 
   const { data: chatSession, isLoading: isLoadingSession } = getChatSession(sessionId);
   
-  // Update the useMediaAsset hook call to include the correct parameters
   const { data: mediaAsset } = useMediaAsset(
     businessId!, 
-    chatSession?.mediaId ?? '',
-    { enabled: !!chatSession?.mediaId }
+    chatSession?.mediaId ?? ''
   );
 
   const handleSendMessage = async () => {
@@ -61,7 +58,6 @@ const ChatWindow = ({ sessionId, onNewMessage }: ChatWindowProps) => {
     }
   };
 
-  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -69,7 +65,6 @@ const ChatWindow = ({ sessionId, onNewMessage }: ChatWindowProps) => {
     }
   }, [messageText]);
   
-  // Scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatSession?.history]);
@@ -102,7 +97,6 @@ const ChatWindow = ({ sessionId, onNewMessage }: ChatWindowProps) => {
   return (
     <Card className="h-full">
       <CardContent className="p-4 h-full flex flex-col">
-        {/* Media Context (if available) */}
         {mediaAsset && (
           <div className="mb-4 p-3 bg-muted rounded-md">
             <div className="flex items-start gap-3">
@@ -147,7 +141,6 @@ const ChatWindow = ({ sessionId, onNewMessage }: ChatWindowProps) => {
           </div>
         )}
 
-        {/* Insight Context (if available) */}
         {chatSession.insightId && (
           <div className="mb-4">
             <InsightSourceBadge 
@@ -157,11 +150,9 @@ const ChatWindow = ({ sessionId, onNewMessage }: ChatWindowProps) => {
           </div>
         )}
 
-        {/* Messages */}
         <ScrollArea className="flex-1 pr-4">
           <div className="space-y-4">
             {chatSession.history.map((msg, index) => {
-              // Skip system messages except the first one
               if (msg.role === 'system' && index !== 0) return null;
               
               return (
@@ -201,7 +192,6 @@ const ChatWindow = ({ sessionId, onNewMessage }: ChatWindowProps) => {
           </div>
         </ScrollArea>
         
-        {/* Input Area */}
         <div className="mt-4 flex gap-2">
           <Textarea
             ref={textareaRef}

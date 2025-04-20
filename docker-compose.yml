@@ -30,7 +30,9 @@ services:
       - redis-data:/data
 
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     environment:
       - MONGODB_URI=mongodb://mongo:27017/ai_ad_system
       - JWT_SECRET=super-secret-123

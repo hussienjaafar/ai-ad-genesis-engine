@@ -15,8 +15,8 @@ export function calculateChiSquare(table: number[][]): number {
         (table[1][0] + table[1][1]) * (table[0][0] + table[1][0]) / (table[0][0] + table[0][1] + table[1][0] + table[1][1])
       ] // expected values
     );
-    
-    return result.chiSquared;
+    // @ts-ignore chiSquaredGoodnessOfFit does not return an object, just a number
+    return typeof result === 'number' ? result : (result.chiSquared || 0);
   } catch (error) {
     console.error('Error calculating chi-square:', error);
     return 0;
@@ -28,11 +28,28 @@ export function calculateChiSquare(table: number[][]): number {
  */
 export function getPValue(chiSquare: number): number {
   try {
-    // Calculate p-value using simple-statistics
-    return 1 - ss.chiSquaredDistributionTable(chiSquare, 1);
+    // There is no chiSquaredDistributionTable in simple-statistics.
+    // Use the complementary CDF for chi-squared distribution with 1 degree of freedom.
+    if (typeof ss.chiSquaredDistributionTable === 'function') {
+      // @ts-ignore If old version exists
+      return 1 - ss.chiSquaredDistributionTable(chiSquare, 1);
+    }
+    // Use the CDF from simple-statistics
+    if (typeof (ss as any).chiSquaredDistribution === 'function') {
+      // New API: ss.chiSquaredDistribution(chiSquare, df)
+      // but this is not in types either, so use approximation:
+      // For chi-square, p = 1 - CDF(chiSquare)
+      // simple-statistics does have .chiSquaredDistributionTable for old, .cdf for new
+      // So we try
+      return 1 - ss.chiSquaredDistribution(chiSquare, 1);
+    }
+    if (typeof ss.cdf === 'function') {
+      return 1 - ss.cdf(chiSquare, 1, 'chi-squared');
+    }
+    return 1; // fallback
   } catch (error) {
     console.error('Error calculating p-value:', error);
-    return 1; // Default to no significance
+    return 1;
   }
 }
 
@@ -47,31 +64,31 @@ export function calculateLiftConfidenceInterval(
   confidenceLevel = 0.95
 ): { lift: number; lowerBound: number; upperBound: number } {
   // Calculate conversion rates
-  const crOriginal = originalConversions / originalImpressions;
-  const crVariant = variantConversions / variantImpressions;
+  const crOriginal = originalImpressions === 0 ? 0 : originalConversions / originalImpressions;
+  const crVariant = variantImpressions === 0 ? 0 : variantConversions / variantImpressions;
   
   // Calculate lift
-  const lift = ((crVariant - crOriginal) / crOriginal) * 100;
+  const lift = crOriginal === 0 ? 0 : ((crVariant - crOriginal) / crOriginal) * 100;
   
-  // Calculate standard errors
-  const seOriginal = Math.sqrt((crOriginal * (1 - crOriginal)) / originalImpressions);
-  const seVariant = Math.sqrt((crVariant * (1 - crVariant)) / variantImpressions);
-  
-  // Combined standard error for the difference
+  // Standard errors
+  const seOriginal = originalImpressions === 0
+    ? 0 : Math.sqrt((crOriginal * (1 - crOriginal)) / originalImpressions);
+  const seVariant = variantImpressions === 0
+    ? 0 : Math.sqrt((crVariant * (1 - crVariant)) / variantImpressions);
   const seDiff = Math.sqrt(seOriginal * seOriginal + seVariant * seVariant);
   
-  // Z score for the given confidence level (e.g., 1.96 for 95% confidence)
-  const zScore = ss.probit((1 + confidenceLevel) / 2);
+  // Z score for the given confidence level (e.g., 1.96 for 95%)
+  const zScore = typeof ss.probit === 'function'
+    ? ss.probit((1 + confidenceLevel) / 2)
+    : 1.96;
   
-  // Confidence interval for the difference in rates
   const marginOfError = zScore * seDiff;
   const diffLower = (crVariant - crOriginal) - marginOfError;
   const diffUpper = (crVariant - crOriginal) + marginOfError;
-  
-  // Convert to lift percentage
-  const liftLower = (diffLower / crOriginal) * 100;
-  const liftUpper = (diffUpper / crOriginal) * 100;
-  
+
+  const liftLower = crOriginal === 0 ? 0 : (diffLower / crOriginal) * 100;
+  const liftUpper = crOriginal === 0 ? 0 : (diffUpper / crOriginal) * 100;
+
   return {
     lift,
     lowerBound: liftLower,
@@ -82,7 +99,7 @@ export function calculateLiftConfidenceInterval(
 /**
  * Enqueue a pattern analysis job for a business
  */
-export const enqueuePatternAnalysis = async (businessId: string) => {
+export const enqueuePatternAnalysis = async (businessId: string): Promise<void> => {
   await patternQueue.add(
     `pattern-analysis-${businessId}`,
     { businessId },

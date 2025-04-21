@@ -1,24 +1,27 @@
 
-import React, { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
 
-const OAuthCallback = () => {
-  const { platform } = useParams<{ platform: string }>();
+export default function OAuthCallback() {
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Process OAuth callback
-    console.log(`Processing ${platform} OAuth callback`);
-  }, [platform]);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        navigate('/');
+      } else {
+        navigate('/login');
+      }
+    });
+  }, [navigate]);
 
   return (
     <div className="flex min-h-screen items-center justify-center">
       <div className="text-center">
-        <h2 className="text-2xl font-semibold mb-4">Connecting to {platform}</h2>
+        <h2 className="text-2xl font-semibold mb-4">Completing sign in...</h2>
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-        <p className="mt-4 text-gray-600">Please wait while we connect your account...</p>
       </div>
     </div>
   );
-};
-
-export default OAuthCallback;
+}

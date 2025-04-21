@@ -1,6 +1,10 @@
 
 import express from 'express';
-import BusinessController from '../controllers/businessController';
+import CreateBusinessController from '../controllers/business/createBusinessController';
+import GetBusinessController from '../controllers/business/getBusinessController';
+import UpdateBusinessController from '../controllers/business/updateBusinessController';
+import OfferingsController from '../controllers/business/offeringsController';
+import PlatformCredentialsController from '../controllers/business/platformCredentialsController';
 import ContentController from '../controllers/contentController';
 import authorize from '../middleware/auth';
 import checkRole from '../middleware/roles';
@@ -10,38 +14,45 @@ import { createBusinessSchema, updateBusinessSchema, offeringsSchema } from '../
 const router = express.Router();
 
 // List all businesses - admin only
-router.get('/', authorize, checkRole('admin'), BusinessController.getAll);
+router.get('/', authorize, checkRole('admin'), GetBusinessController.getAll);
 
 // Create business - admin only
 router.post('/', 
   authorize, 
   checkRole('admin'), 
   validateBody(createBusinessSchema),
-  BusinessController.create
+  CreateBusinessController.create
 );
 
 // Get a single business - any authenticated user
-router.get('/:id', authorize, BusinessController.getById);
+router.get('/:id', authorize, GetBusinessController.getById);
 
 // Update business - admin or owner
 router.put('/:id', 
   authorize, 
   validateBody(updateBusinessSchema),
-  BusinessController.update
+  UpdateBusinessController.update
 );
 
 // Add offerings to a business - admin or owner
 router.post('/:id/offerings', 
   authorize, 
   validateBody(offeringsSchema),
-  BusinessController.addOfferings
+  OfferingsController.addOfferings
 );
 
 // Store platform credentials - admin or owner
-router.post('/:id/platforms/:platform', authorize, BusinessController.storePlatformCredentials);
+router.post('/:id/platforms/:platform', 
+  authorize, 
+  PlatformCredentialsController.storePlatformCredentials
+);
 
 // Generate content for a business - admin or client owner only
-router.post('/:id/content/generate', authorize, checkRole('admin', 'clientOwner'), ContentController.generateContent);
+router.post('/:id/content/generate', 
+  authorize, 
+  checkRole('admin', 'clientOwner'), 
+  ContentController.generateContent
+);
 
 // Get content for a business
 router.get('/:id/content', authorize, ContentController.getContentForBusiness);

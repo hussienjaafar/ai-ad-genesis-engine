@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -6,7 +5,6 @@ import { toast } from "sonner";
 export function SocialLoginButtons() {
   const handleGoogleLogin = async () => {
     try {
-      // Define the redirect URL explicitly to ensure consistency
       const redirectTo = `${window.location.origin}/oauth/callback`;
       
       console.log(`Initiating Google OAuth with redirect to: ${redirectTo}`);

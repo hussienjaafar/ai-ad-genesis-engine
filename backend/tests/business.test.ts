@@ -1,4 +1,3 @@
-
 import request from 'supertest';
 import express from 'express';
 import cors from 'cors';
@@ -52,11 +51,25 @@ describe('Business API', () => {
     });
 
     it('should return 400 if required fields are missing', async () => {
-      // Missing name
       const invalidData = {
         businessType: 'e-commerce',
+      };
+
+      const response = await request(app)
+        .post('/api/businesses')
+        .send(invalidData);
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('error', 'Validation Error');
+      expect(response.body).toHaveProperty('details');
+    });
+
+    it('should validate email format', async () => {
+      const invalidData = {
+        name: 'Test Business',
+        businessType: 'e-commerce',
         contact: {
-          email: 'business@example.com',
+          email: 'invalid-email',
         },
       };
 
@@ -65,7 +78,7 @@ describe('Business API', () => {
         .send(invalidData);
 
       expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty('error', 'Missing required fields');
+      expect(response.body.details.contact.email).toBeDefined();
     });
   });
 

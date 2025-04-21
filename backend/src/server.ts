@@ -1,4 +1,3 @@
-
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -57,12 +56,21 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Error handling
+// Enhanced error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
+  console.error('Error:', {
+    message: err.message,
+    stack: err.stack,
+    status: err.status || 500,
+    path: req.path,
+    method: req.method,
+  });
+
   res.status(err.status || 500).json({
     error: {
       message: err.message || 'Internal Server Error',
+      code: err.code,
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
     },
   });
 });

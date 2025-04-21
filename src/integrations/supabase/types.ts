@@ -9,7 +9,406 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      ad_platform_integrations: {
+        Row: {
+          account_id: string
+          account_name: string | null
+          business_id: string
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_connected: boolean | null
+          last_synced: string | null
+          metadata: Json | null
+          needs_reauth: boolean | null
+          platform: string
+          refresh_token: string | null
+          token: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          account_id: string
+          account_name?: string | null
+          business_id: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_connected?: boolean | null
+          last_synced?: string | null
+          metadata?: Json | null
+          needs_reauth?: boolean | null
+          platform: string
+          refresh_token?: string | null
+          token?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          account_id?: string
+          account_name?: string | null
+          business_id?: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_connected?: boolean | null
+          last_synced?: string | null
+          metadata?: Json | null
+          needs_reauth?: boolean | null
+          platform?: string
+          refresh_token?: string | null
+          token?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_platform_integrations_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      businesses: {
+        Row: {
+          brand_voice: Json | null
+          business_type: string
+          contact: Json
+          created_at: string | null
+          description: string | null
+          id: string
+          integrations: Json | null
+          is_deleted: boolean | null
+          name: string
+          offerings: string[] | null
+          onboarding_step: number
+          settings: Json | null
+          status: string
+          target_audience: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          brand_voice?: Json | null
+          business_type: string
+          contact?: Json
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          integrations?: Json | null
+          is_deleted?: boolean | null
+          name: string
+          offerings?: string[] | null
+          onboarding_step?: number
+          settings?: Json | null
+          status?: string
+          target_audience?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          brand_voice?: Json | null
+          business_type?: string
+          contact?: Json
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          integrations?: Json | null
+          is_deleted?: boolean | null
+          name?: string
+          offerings?: string[] | null
+          onboarding_step?: number
+          settings?: Json | null
+          status?: string
+          target_audience?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          role: string
+          session_id: string
+          tokens_used: number | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          role: string
+          session_id: string
+          tokens_used?: number | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          role?: string
+          session_id?: string
+          tokens_used?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_sessions: {
+        Row: {
+          business_id: string
+          created_at: string | null
+          id: string
+          is_deleted: boolean | null
+          metadata: Json | null
+          status: string
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          business_id: string
+          created_at?: string | null
+          id?: string
+          is_deleted?: boolean | null
+          metadata?: Json | null
+          status?: string
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          business_id?: string
+          created_at?: string | null
+          id?: string
+          is_deleted?: boolean | null
+          metadata?: Json | null
+          status?: string
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_sessions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_items: {
+        Row: {
+          business_id: string
+          content_type: string
+          created_at: string | null
+          generated_from: Json | null
+          id: string
+          is_deleted: boolean | null
+          metadata: Json | null
+          params: Json
+          parsed_content: Json
+          raw_prompt: string | null
+          raw_response: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          business_id: string
+          content_type: string
+          created_at?: string | null
+          generated_from?: Json | null
+          id?: string
+          is_deleted?: boolean | null
+          metadata?: Json | null
+          params?: Json
+          parsed_content?: Json
+          raw_prompt?: string | null
+          raw_response?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          business_id?: string
+          content_type?: string
+          created_at?: string | null
+          generated_from?: Json | null
+          id?: string
+          is_deleted?: boolean | null
+          metadata?: Json | null
+          params?: Json
+          parsed_content?: Json
+          raw_prompt?: string | null
+          raw_response?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_items_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      experiment_results: {
+        Row: {
+          confidence_interval: Json | null
+          created_at: string | null
+          experiment_id: string
+          id: string
+          is_significant: boolean | null
+          last_updated: string | null
+          lift: number | null
+          p_value: number | null
+          results: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          confidence_interval?: Json | null
+          created_at?: string | null
+          experiment_id: string
+          id?: string
+          is_significant?: boolean | null
+          last_updated?: string | null
+          lift?: number | null
+          p_value?: number | null
+          results?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          confidence_interval?: Json | null
+          created_at?: string | null
+          experiment_id?: string
+          id?: string
+          is_significant?: boolean | null
+          last_updated?: string | null
+          lift?: number | null
+          p_value?: number | null
+          results?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "experiment_results_experiment_id_fkey"
+            columns: ["experiment_id"]
+            isOneToOne: false
+            referencedRelation: "experiments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      experiments: {
+        Row: {
+          business_id: string
+          content_id_original: string
+          content_id_variant: string
+          created_at: string | null
+          end_date: string
+          id: string
+          name: string
+          split: Json
+          start_date: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          business_id: string
+          content_id_original: string
+          content_id_variant: string
+          created_at?: string | null
+          end_date: string
+          id?: string
+          name: string
+          split?: Json
+          start_date: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          business_id?: string
+          content_id_original?: string
+          content_id_variant?: string
+          created_at?: string | null
+          end_date?: string
+          id?: string
+          name?: string
+          split?: Json
+          start_date?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "experiments_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "experiments_content_id_original_fkey"
+            columns: ["content_id_original"]
+            isOneToOne: false
+            referencedRelation: "content_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "experiments_content_id_variant_fkey"
+            columns: ["content_id_variant"]
+            isOneToOne: false
+            referencedRelation: "content_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      performance_insights: {
+        Row: {
+          business_id: string
+          created_at: string | null
+          id: string
+          metrics: Json | null
+          other_insights: Json | null
+          pattern_insights: Json | null
+          primary_category: string
+          updated_at: string | null
+        }
+        Insert: {
+          business_id: string
+          created_at?: string | null
+          id?: string
+          metrics?: Json | null
+          other_insights?: Json | null
+          pattern_insights?: Json | null
+          primary_category: string
+          updated_at?: string | null
+        }
+        Update: {
+          business_id?: string
+          created_at?: string | null
+          id?: string
+          metrics?: Json | null
+          other_insights?: Json | null
+          pattern_insights?: Json | null
+          primary_category?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_insights_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

@@ -10,8 +10,9 @@ export default function OAuthCallback() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Get session from URL hash
-        const { data, error } = await supabase.auth.getSession();
+        const { data, error } = await supabase.auth.getSessionFromUrl({
+          storeSession: true
+        });
         
         if (error) {
           console.error('OAuth callback error:', error.message);
@@ -20,9 +21,9 @@ export default function OAuthCallback() {
           return;
         }
 
-        if (data.session) {
+        if (data?.session) {
           toast.success('Successfully signed in!');
-          navigate('/');
+          navigate('/', { replace: true });
         } else {
           navigate('/login');
         }

@@ -1,6 +1,10 @@
 
 # AI Ad Engine
 
+[![CI/CD Pipeline](https://github.com/yourusername/ai-ad-genesis-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/ai-ad-genesis-engine/actions/workflows/ci.yml)
+[![Backend Test Coverage](https://img.shields.io/badge/backend%20coverage-80%25-brightgreen)](https://github.com/yourusername/ai-ad-genesis-engine)
+[![Frontend Test Coverage](https://img.shields.io/badge/frontend%20coverage-70%25-yellow)](https://github.com/yourusername/ai-ad-genesis-engine)
+
 An AI-powered advertising platform for generating and optimizing ad content.
 
 ## Features
@@ -68,6 +72,14 @@ Run automated tests: `npm test`
 - Unit tests: Jest
 - E2E tests: Cypress
 - Coverage target: ≥80%
+
+## CI/CD Pipeline
+
+- **Linting**: ESLint checks for code quality
+- **Backend Tests**: Jest unit and integration tests
+- **Frontend Tests**: React Testing Library component tests
+- **E2E Tests**: Cypress for end-to-end testing
+- **Build**: Production build artifacts generation
 
 ## Notes
 - Charts display once at least one day of performance data is ingested.

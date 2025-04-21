@@ -12,7 +12,22 @@ export default function OAuthCallback() {
     const handleCallback = async () => {
       try {
         console.log('Processing OAuth callback...');
-        const { data, error } = await supabase.auth.getSessionFromUrl();
+        
+        // Extract hash params from the URL
+        const hashParams = window.location.hash.substring(1);
+        
+        if (!hashParams) {
+          console.error('No hash parameters found in the URL');
+          setError('No authentication data found');
+          toast.error('Authentication failed');
+          navigate('/login');
+          return;
+        }
+        
+        console.log('Hash parameters found, extracting session...');
+        
+        // The newer Supabase client uses setSession with the hash
+        const { data, error } = await supabase.auth.exchangeCodeForSession(hashParams);
         
         if (error) {
           console.error('OAuth callback error:', error.message);

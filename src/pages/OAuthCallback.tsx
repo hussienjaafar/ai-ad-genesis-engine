@@ -10,22 +10,47 @@ export default function OAuthCallback() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        const { data, error } = await supabase.auth.getSessionFromUrl({
-          storeSession: true
-        });
+        // The URL hash fragment contains the access token
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
         
-        if (error) {
-          console.error('OAuth callback error:', error.message);
-          toast.error('Failed to complete authentication');
-          navigate('/login');
-          return;
-        }
+        if (accessToken) {
+          // Set the session with the access token
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: hashParams.get('refresh_token') || '',
+          });
+          
+          if (error) {
+            console.error('OAuth callback error:', error.message);
+            toast.error('Failed to complete authentication');
+            navigate('/login');
+            return;
+          }
 
-        if (data?.session) {
-          toast.success('Successfully signed in!');
-          navigate('/', { replace: true });
+          if (data?.session) {
+            toast.success('Successfully signed in!');
+            navigate('/', { replace: true });
+          } else {
+            navigate('/login');
+          }
         } else {
-          navigate('/login');
+          // Fallback to checking current session
+          const { data: { session }, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            console.error('Auth callback error:', error.message);
+            toast.error('Failed to complete authentication');
+            navigate('/login');
+            return;
+          }
+
+          if (session) {
+            toast.success('Successfully signed in!');
+            navigate('/', { replace: true });
+          } else {
+            navigate('/login');
+          }
         }
       } catch (err) {
         console.error('Error processing authentication:', err);

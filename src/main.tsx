@@ -6,7 +6,15 @@ import App from './App.tsx'
 import './index.css'
 import { AccessTokenProvider } from './hooks/useAccessToken.tsx'
 
-const queryClient = new QueryClient();
+// Initialize the query client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      staleTime: 60 * 1000, // 1 minute
+    },
+  },
+});
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>

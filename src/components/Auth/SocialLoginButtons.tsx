@@ -6,8 +6,10 @@ import { toast } from "sonner";
 export function SocialLoginButtons() {
   const handleGoogleLogin = async () => {
     try {
-      // Use explicit URL instead of window.location.origin to ensure consistency
-      const redirectTo = "http://localhost:8080/oauth/callback";
+      // Define the redirect URL explicitly to ensure consistency
+      const redirectTo = `${window.location.origin}/oauth/callback`;
+      
+      console.log(`Initiating Google OAuth with redirect to: ${redirectTo}`);
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',

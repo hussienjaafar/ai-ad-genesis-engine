@@ -19,6 +19,8 @@ export default function OAuthCallback() {
 
     const handleAuthCallback = async () => {
       try {
+        console.log('Processing OAuth callback...');
+        
         // The URL hash fragment contains the access token
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const accessToken = hashParams.get('access_token');
@@ -33,6 +35,7 @@ export default function OAuthCallback() {
 
         console.log('Setting session with tokens from URL hash');
         
+        // Set the session with the tokens from the URL
         const { data, error } = await supabase.auth.setSession({
           access_token: accessToken,
           refresh_token: refreshToken || '',
@@ -46,14 +49,14 @@ export default function OAuthCallback() {
         }
 
         if (data?.session) {
-          // Force refresh the auth context
-          await supabase.auth.refreshSession();
+          // Successfully set the session
+          console.log('Session set successfully, navigating to home');
           
-          // Small delay to ensure context updates
+          // Give the auth state change listener time to update
           setTimeout(() => {
             toast.success('Successfully signed in!');
             navigate('/', { replace: true });
-          }, 500);
+          }, 1000);
         } else {
           console.error('No session data returned after setting session');
           toast.error('Authentication process failed');

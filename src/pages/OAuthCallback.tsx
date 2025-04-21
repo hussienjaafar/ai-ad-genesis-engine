@@ -46,8 +46,14 @@ export default function OAuthCallback() {
         }
 
         if (data?.session) {
-          toast.success('Successfully signed in!');
-          navigate('/', { replace: true });
+          // Force refresh the auth context
+          await supabase.auth.refreshSession();
+          
+          // Small delay to ensure context updates
+          setTimeout(() => {
+            toast.success('Successfully signed in!');
+            navigate('/', { replace: true });
+          }, 500);
         } else {
           console.error('No session data returned after setting session');
           toast.error('Authentication process failed');

@@ -2,18 +2,31 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 export default function OAuthCallback() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const handleAuthCallback = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('OAuth callback error:', error.message);
+        toast.error('Failed to complete authentication');
+        navigate('/login');
+        return;
+      }
+
       if (session) {
+        toast.success('Successfully signed in!');
         navigate('/');
       } else {
         navigate('/login');
       }
-    });
+    };
+
+    handleAuthCallback();
   }, [navigate]);
 
   return (

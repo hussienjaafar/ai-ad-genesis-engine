@@ -1,16 +1,30 @@
 
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 export function SocialLoginButtons() {
   const handleGoogleLogin = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent'
+          }
+        }
+      });
+      
+      if (error) {
+        console.error('Error logging in with Google:', error.message);
+        toast.error(error.message || 'Failed to sign in with Google');
       }
-    });
-    if (error) console.error('Error logging in with Google:', error.message);
+    } catch (error) {
+      console.error('Unexpected error during Google sign in:', error);
+      toast.error('An unexpected error occurred');
+    }
   };
 
   return (

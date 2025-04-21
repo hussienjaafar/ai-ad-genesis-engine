@@ -1,6 +1,5 @@
 
 import { Button } from "@/components/ui/button";
-import { Github, Facebook } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 export function SocialLoginButtons() {
@@ -12,16 +11,6 @@ export function SocialLoginButtons() {
       }
     });
     if (error) console.error('Error logging in with Google:', error.message);
-  };
-
-  const handleFacebookLogin = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'facebook',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`
-      }
-    });
-    if (error) console.error('Error logging in with Facebook:', error.message);
   };
 
   return (
@@ -51,16 +40,6 @@ export function SocialLoginButtons() {
           />
         </svg>
         Continue with Google
-      </Button>
-
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full flex items-center justify-center gap-2"
-        onClick={handleFacebookLogin}
-      >
-        <Facebook className="w-5 h-5 text-blue-600" />
-        Continue with Facebook
       </Button>
     </div>
   );

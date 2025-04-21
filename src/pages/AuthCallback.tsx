@@ -10,20 +10,43 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        const { data, error } = await supabase.auth.getSessionFromUrl();
+        // The URL contains the auth info including the access token in the hash fragment
+        // We need to extract the session from there
+        const hashParams = window.location.hash;
         
-        if (error) {
-          console.error('Auth callback error:', error.message);
-          toast.error('Failed to complete authentication');
-          navigate('/login');
-          return;
-        }
+        if (hashParams) {
+          const { data, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            console.error('Auth callback error:', error.message);
+            toast.error('Failed to complete authentication');
+            navigate('/login');
+            return;
+          }
 
-        if (data?.session) {
-          toast.success('Successfully signed in!');
-          navigate('/');
+          if (data.session) {
+            toast.success('Successfully signed in!');
+            navigate('/');
+          } else {
+            navigate('/login');
+          }
         } else {
-          navigate('/login');
+          // If no hash parameters, fall back to standard session check
+          const { data: { session }, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            console.error('Auth callback error:', error.message);
+            toast.error('Failed to complete authentication');
+            navigate('/login');
+            return;
+          }
+
+          if (session) {
+            toast.success('Successfully signed in!');
+            navigate('/');
+          } else {
+            navigate('/login');
+          }
         }
       } catch (err) {
         console.error('Error processing authentication:', err);

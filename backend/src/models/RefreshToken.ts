@@ -1,10 +1,9 @@
 
 import { Schema, model, Document, Types } from 'mongoose';
-import crypto from 'crypto';
 
 export interface IRefreshToken extends Document {
   userId: Types.ObjectId;
-  tokenHash: string; // Store hash instead of plaintext token
+  token: string;
   expiresAt: Date;
   ip: string;
   userAgent: string;
@@ -21,14 +20,13 @@ export interface IRefreshToken extends Document {
  *       type: object
  *       required:
  *         - userId
- *         - tokenHash
+ *         - token
  *         - expiresAt
  *       properties:
  *         userId:
  *           type: string
- *         tokenHash:
+ *         token:
  *           type: string
- *           description: SHA-256 hash of the token for security
  *         expiresAt:
  *           type: string
  *           format: date-time
@@ -44,7 +42,7 @@ const refreshTokenSchema = new Schema<IRefreshToken>(
       ref: 'User',
       required: true,
     },
-    tokenHash: {
+    token: {
       type: String,
       required: true,
       unique: true,
@@ -65,11 +63,6 @@ const refreshTokenSchema = new Schema<IRefreshToken>(
 
 // Create TTL index on expiresAt field
 refreshTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-
-// Static method to hash a token
-refreshTokenSchema.statics.hashToken = function(token: string): string {
-  return crypto.createHash('sha256').update(token).digest('hex');
-};
 
 const RefreshTokenModel = model<IRefreshToken>('RefreshToken', refreshTokenSchema);
 

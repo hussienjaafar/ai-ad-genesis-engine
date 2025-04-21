@@ -3,11 +3,6 @@ import { Types } from 'mongoose';
 import UsageRecordModel from '../models/UsageRecord';
 import BusinessModel from '../models/Business';
 import { startOfDay, startOfMonth, endOfMonth } from 'date-fns';
-import * as redis from '../lib/redis';
-
-// Define key prefixes for Redis operations
-const TOKEN_RESERVATION_PREFIX = 'token_reservation:';
-const QUOTA_WARNING_PREFIX = 'quota_warning:';
 
 export class UsageService {
   /**
@@ -44,60 +39,6 @@ export class UsageService {
     if (result.matchedCount === 0 && !result.upsertedId) {
       throw new Error('Failed to record usage');
     }
-    
-    // Clear any token reservations after successful recording
-    const reservationKey = `${TOKEN_RESERVATION_PREFIX}${businessId.toString()}`;
-    await redis.del(reservationKey);
-  }
-
-  /**
-   * Reserve estimated tokens to prevent race conditions
-   */
-  static async reserveTokens(
-    businessId: string | Types.ObjectId,
-    estimatedTokens: number
-  ): Promise<void> {
-    if (!Types.ObjectId.isValid(businessId)) {
-      throw new Error('Invalid business ID');
-    }
-    
-    const reservationKey = `${TOKEN_RESERVATION_PREFIX}${businessId.toString()}`;
-    
-    // Get current reservation
-    const currentReservation = await redis.get(reservationKey);
-    const currentTokens = currentReservation ? parseInt(currentReservation) : 0;
-    
-    // Add new reservation
-    await redis.setWithExpiry(reservationKey, (currentTokens + estimatedTokens).toString(), 300); // 5 minute expiry
-  }
-
-  /**
-   * Mark that a business is approaching its quota limit
-   */
-  static async markQuotaNearlyReached(businessId: string | Types.ObjectId): Promise<void> {
-    if (!Types.ObjectId.isValid(businessId)) {
-      throw new Error('Invalid business ID');
-    }
-    
-    const warningKey = `${QUOTA_WARNING_PREFIX}${businessId.toString()}`;
-    
-    // Set a warning flag that expires at the end of the month
-    const currentMonth = new Date();
-    const lastDay = endOfMonth(currentMonth);
-    const ttlSeconds = Math.floor((lastDay.getTime() - currentMonth.getTime()) / 1000);
-    
-    await redis.setWithExpiry(warningKey, 'warned', ttlSeconds);
-    
-    // Also update business model to indicate warning has been issued
-    await BusinessModel.updateOne(
-      { _id: businessId },
-      { 
-        $set: { 
-          'settings.quotaWarningIssued': true,
-          'settings.quotaWarningDate': new Date()
-        } 
-      }
-    );
   }
 
   /**
@@ -143,19 +84,11 @@ export class UsageService {
     ]);
 
     const totalUsed = usage.length > 0 ? usage[0].totalTokensConsumed : 0;
-    
-    // Also account for any token reservations in progress
-    const reservationKey = `${TOKEN_RESERVATION_PREFIX}${businessId.toString()}`;
-    const reservedTokensStr = await redis.get(reservationKey);
-    const reservedTokens = reservedTokensStr ? parseInt(reservedTokensStr) : 0;
-    
-    // Total used is actual used plus any reserved tokens
-    const effectiveUsed = totalUsed + reservedTokens;
-    const remaining = Math.max(0, quotaLimit - effectiveUsed);
+    const remaining = Math.max(0, quotaLimit - totalUsed);
     
     return {
-      hasQuota: effectiveUsed < quotaLimit,
-      used: effectiveUsed,
+      hasQuota: totalUsed < quotaLimit,
+      used: totalUsed,
       limit: quotaLimit,
       remaining
     };
@@ -190,44 +123,14 @@ export class UsageService {
     currentUsage: number;
     quota: number;
     percentUsed: number;
-    isApproachingQuota: boolean;
   }> {
-    // Check if warning has been issued for this business
-    const warningKey = `${QUOTA_WARNING_PREFIX}${businessId.toString()}`;
-    const warningIssued = await redis.get(warningKey);
-    
     const quotaInfo = await this.checkQuota(businessId);
     
     return {
       currentUsage: quotaInfo.used,
       quota: quotaInfo.limit,
-      percentUsed: (quotaInfo.used / quotaInfo.limit) * 100,
-      isApproachingQuota: Boolean(warningIssued) || quotaInfo.used >= quotaInfo.limit * 0.9
+      percentUsed: (quotaInfo.used / quotaInfo.limit) * 100
     };
-  }
-
-  /**
-   * Reset quota warning for a business (typically done after upgrading plan)
-   */
-  static async resetQuotaWarning(businessId: string | Types.ObjectId): Promise<void> {
-    if (!Types.ObjectId.isValid(businessId)) {
-      throw new Error('Invalid business ID');
-    }
-    
-    const warningKey = `${QUOTA_WARNING_PREFIX}${businessId.toString()}`;
-    await redis.del(warningKey);
-    
-    await BusinessModel.updateOne(
-      { _id: businessId },
-      { 
-        $set: { 
-          'settings.quotaWarningIssued': false 
-        },
-        $unset: { 
-          'settings.quotaWarningDate': "" 
-        }
-      }
-    );
   }
 }
 

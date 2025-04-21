@@ -13,7 +13,7 @@ export const AgencyController = {
         return;
       }
       
-      const ownerUserId: string = req.user.id;
+      const ownerUserId = req.user.id;
       
       if (!name) {
         res.status(400).json({ error: 'Agency name is required' });
@@ -26,7 +26,7 @@ export const AgencyController = {
       });
 
       res.status(201).json(agency);
-    } catch (error: unknown) {
+    } catch (error) {
       console.error('Error creating agency:', error);
       res.status(500).json({ error: 'Failed to create agency' });
     }
@@ -55,7 +55,7 @@ export const AgencyController = {
       }
 
       res.json(agency);
-    } catch (error: unknown) {
+    } catch (error) {
       console.error('Error updating agency clients:', error);
       res.status(500).json({ error: 'Failed to update agency clients' });
     }
@@ -70,7 +70,7 @@ export const AgencyController = {
 
       const agencies = await agencyService.getAgencies(req.user.id);
       res.json(agencies);
-    } catch (error: unknown) {
+    } catch (error) {
       console.error('Error fetching agencies:', error);
       res.status(500).json({ error: 'Failed to fetch agencies' });
     }
@@ -81,7 +81,7 @@ export const AgencyController = {
       const { id } = req.params;
       const overview = await agencyService.getOverview(id);
       res.json(overview);
-    } catch (error: unknown) {
+    } catch (error) {
       console.error('Error fetching agency overview:', error);
       res.status(500).json({ error: 'Failed to fetch agency overview' });
     }

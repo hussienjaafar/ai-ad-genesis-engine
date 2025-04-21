@@ -1,13 +1,6 @@
 
 import { Schema, model, Document, Types } from 'mongoose';
 
-export interface IContentRevision {
-  revisionContent: Record<string, any>;
-  timestamp: Date;
-  sessionId: string;
-  rawContent: string;
-}
-
 export interface IContent extends Document {
   businessId: Types.ObjectId;
   contentType: string;
@@ -21,7 +14,6 @@ export interface IContent extends Document {
     insightId?: Types.ObjectId;
     elementText?: string;
   };
-  revisions?: IContentRevision[];
   isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -31,18 +23,6 @@ export interface IContent extends Document {
  * @swagger
  * components:
  *   schemas:
- *     ContentRevision:
- *       type: object
- *       properties:
- *         revisionContent:
- *           type: object
- *         timestamp:
- *           type: string
- *           format: date-time
- *         sessionId:
- *           type: string
- *         rawContent:
- *           type: string
  *     Content:
  *       type: object
  *       required:
@@ -69,10 +49,6 @@ export interface IContent extends Document {
  *               type: string
  *             elementText:
  *               type: string
- *         revisions:
- *           type: array
- *           items:
- *             $ref: '#/components/schemas/ContentRevision'
  */
 const contentSchema = new Schema<IContent>(
   {
@@ -108,17 +84,6 @@ const contentSchema = new Schema<IContent>(
       },
       elementText: String,
     },
-    revisions: [
-      {
-        revisionContent: Schema.Types.Mixed,
-        timestamp: {
-          type: Date,
-          default: Date.now
-        },
-        sessionId: String,
-        rawContent: String
-      }
-    ],
     isDeleted: {
       type: Boolean,
       default: false,

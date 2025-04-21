@@ -4,6 +4,7 @@ import ExperimentModel, { ExperimentDocument } from '../models/Experiment';
 import ExperimentResultModel from '../models/ExperimentResult';
 import ExperimentDailyStatsModel from '../models/ExperimentDailyStats';
 import * as ss from 'simple-statistics';
+import { calculateLiftConfidenceInterval } from '../queues/patternJobProcessor';
 import alertService from './alertService';
 import crypto from 'crypto';
 
@@ -56,42 +57,6 @@ class ExperimentService {
     } catch (error) {
       console.error('Error fetching experiment:', error);
       throw error;
-    }
-  }
-
-  /**
-   * Verify if a user has access to an experiment via business ownership or agency relationship
-   */
-  async verifyExperimentAccess(experimentId: string, userId: string | undefined): Promise<boolean> {
-    if (!userId) return false;
-    
-    try {
-      // First get the experiment to find its businessId
-      const experiment = await ExperimentModel.findById(experimentId);
-      if (!experiment) return false;
-      
-      const businessId = experiment.businessId;
-      
-      // Check direct business ownership
-      const Business = mongoose.model('Business');
-      const business = await Business.findOne({ 
-        _id: businessId,
-        userId: userId
-      });
-      
-      if (business) return true;
-      
-      // Check agency relationship
-      const Agency = mongoose.model('Agency');
-      const agency = await Agency.findOne({ 
-        adminId: userId,
-        clientBusinessIds: businessId
-      });
-      
-      return !!agency;
-    } catch (error) {
-      console.error('Error verifying experiment access:', error);
-      return false;
     }
   }
 
@@ -260,63 +225,20 @@ class ExperimentService {
       // Calculate lift
       const lift = originalCR === 0 ? 0 : ((variantCR - originalCR) / originalCR) * 100;
       
-      // Calculate statistical significance using chi-squared test
-      // Create a contingency table for the chi-squared test
-      const table = [
-        [originalConversions, originalImpressions - originalConversions],
-        [variantConversions, variantImpressions - variantConversions]
-      ];
+      // Calculate statistical significance (p-value) using simple-statistics
+      const pValue = originalImpressions === 0 || variantImpressions === 0 ? 1.0 : 
+        this.calculatePValue(
+          originalConversions, originalImpressions,
+          variantConversions, variantImpressions
+        );
       
-      let pValue = 1.0;
-      let isSignificant = false;
+      // Calculate confidence intervals for lift
+      const confidenceInterval = calculateLiftConfidenceInterval(
+        originalConversions, originalImpressions,
+        variantConversions, variantImpressions
+      );
       
-      try {
-        if (originalImpressions > 0 && variantImpressions > 0) {
-          // Use simple-statistics for chi-squared test
-          const observed = [originalConversions, variantConversions];
-          const expected = [
-            (originalConversions + variantConversions) * originalImpressions / (originalImpressions + variantImpressions),
-            (originalConversions + variantConversions) * variantImpressions / (originalImpressions + variantImpressions)
-          ];
-          
-          const chiSquared = ss.chiSquaredGoodnessOfFit(observed, expected).chiSquared;
-          pValue = 1 - ss.chiSquaredDistributionTable(chiSquared, 1);
-          isSignificant = pValue < 0.05;
-        }
-      } catch (error) {
-        console.error('Error calculating statistical significance:', error);
-      }
-      
-      // Calculate confidence intervals using simple-statistics
-      let confidenceInterval = { lower: 0, upper: 0 };
-      
-      try {
-        if (originalImpressions > 0 && variantImpressions > 0) {
-          // Calculate standard error for the difference in proportions
-          const originalSE = Math.sqrt(originalCR * (1 - originalCR) / originalImpressions);
-          const variantSE = Math.sqrt(variantCR * (1 - variantCR) / variantImpressions);
-          const diffSE = Math.sqrt(Math.pow(originalSE, 2) + Math.pow(variantSE, 2));
-          
-          // Calculate the absolute difference in conversion rates
-          const absoluteDiff = variantCR - originalCR;
-          
-          // Calculate 95% confidence interval using z-score of 1.96
-          confidenceInterval = {
-            lower: absoluteDiff - 1.96 * diffSE,
-            upper: absoluteDiff + 1.96 * diffSE
-          };
-          
-          // Convert to relative (percentage) confidence interval if original rate is not zero
-          if (originalCR > 0) {
-            confidenceInterval = {
-              lower: (confidenceInterval.lower / originalCR) * 100,
-              upper: (confidenceInterval.upper / originalCR) * 100
-            };
-          }
-        }
-      } catch (error) {
-        console.error('Error calculating confidence interval:', error);
-      }
+      const isSignificant = pValue < 0.05;
       
       // Update results in database
       const results = await ExperimentResultModel.findOneAndUpdate(
@@ -363,10 +285,52 @@ class ExperimentService {
   }
 
   /**
+   * Calculate p-value using simple-statistics library
+   */
+  private calculatePValue(
+    conversionA: number,
+    impressionA: number,
+    conversionB: number,
+    impressionB: number
+  ): number {
+    // Prevent division by zero
+    if (impressionA === 0 || impressionB === 0) {
+      return 1.0;
+    }
+
+    try {
+      // Create contingency table
+      const table = [
+        [conversionA, impressionA - conversionA],
+        [conversionB, impressionB - conversionB]
+      ];
+
+      // Calculate chi-squared value
+      const chiSquared = ss.chiSquaredGoodnessOfFit(
+        [conversionA, conversionB],
+        [
+          (conversionA + conversionB) * impressionA / (impressionA + impressionB),
+          (conversionA + conversionB) * impressionB / (impressionA + impressionB)
+        ]
+      ).chiSquared;
+
+      // Calculate p-value from chi-squared with 1 degree of freedom
+      return 1 - ss.chiSquaredDistributionTable(chiSquared, 1);
+    } catch (error) {
+      console.error('Error calculating p-value:', error);
+      return 1.0; // Default to no significance
+    }
+  }
+
+  /**
    * Get experiment results
    */
   async getResults(experimentId: string): Promise<any> {
     try {
+      // First compute the latest results
+      await this.computeResults(experimentId);
+      
+      // Then return them
       return await ExperimentResultModel.findOne({ experimentId: new mongoose.Types.ObjectId(experimentId) });
     } catch (error) {
       console.error('Error getting experiment results:', error);

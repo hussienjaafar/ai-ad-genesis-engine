@@ -1,56 +1,43 @@
 
-export interface DailyMetric {
+// No need for mongoose import at the TypeScript interface level
+// Using plain TypeScript interfaces instead
+
+export interface DailyPerformance {
   date: string;
   impressions: number;
   clicks: number;
   spend: number;
+  leads: number;
   ctr: number;
   cpc: number;
+  cpl: number;
   conversions?: number;
-  costPerConversion?: number;
-}
-
-export interface KPI {
-  name: string;
-  value: number;
-  change: number;
-  trend: 'up' | 'down' | 'neutral';
-  isPositive: boolean;
 }
 
 export interface PerformanceMetrics {
   kpis: {
-    impressions?: KPI;
-    clicks?: KPI;
-    ctr?: KPI;
-    spend?: KPI;
-    conversions?: KPI;
-    costPerConversion?: KPI;
+    spend: number;
+    roas: number;
+    ctr: number;
+    cpl: number;
+    cpc?: number;
+    impressions?: number;
+    clicks?: number;
+    conversions?: number;
   };
-  daily: DailyMetric[];
-  totals: {
+  totals?: {
+    spend: number;
     impressions: number;
     clicks: number;
-    spend: number;
-    ctr: number;
-    leads?: number;
+    leads: number;
+    ctr: number; // Adding the missing ctr property
+    conversions?: number;
   };
-  lastUpdated: string; // ISO date string of when data was last updated
+  daily: DailyPerformance[];
 }
 
 export interface PatternInsight {
-  _id: string;
-  title: string;
-  description: string;
-  impact: 'high' | 'medium' | 'low';
-  type: 'opportunity' | 'issue' | 'information';
-  category: string;
-  confidence: number;
-  tags: string[];
-  metadata?: Record<string, any>;
-  createdAt: string;
-  
-  // Adding back the old properties for backward compatibility
+  _id?: string;
   element: string;
   elementType: string;
   performance: {
@@ -73,8 +60,20 @@ export interface PatternInsight {
 
 export interface InsightData {
   patternInsights: PatternInsight[];
-  lastUpdated?: string;
+  businessId: string;
+  createdAt: string;
 }
 
-// For backwards compatibility with PerformanceChart component
-export type DailyPerformance = DailyMetric;
+// Add DailyMetric to fix the error in PerformanceChart.tsx
+export interface DailyMetric {
+  date: string;
+  impressions?: number;
+  clicks?: number;
+  conversions?: number;
+  spend?: number;
+  ctr?: number;
+  cpc?: number;
+  cpl?: number;
+  roas?: number;
+  // Make all properties optional to be safe
+}

@@ -44,16 +44,13 @@ const PerformanceMetrics = ({ isLoading, error, performanceData }: PerformanceMe
     );
   }
 
-  // Use kpis from performanceData if available
-  const kpis = performanceData.kpis || {};
-  
   // Default values if totals are not available
   const totals = performanceData.totals || {
     impressions: 0,
     clicks: 0,
     spend: 0,
     leads: 0,
-    ctr: 0
+    ctr: 0 // Add the ctr property
   };
 
   const metrics: PerformanceMetric[] = [

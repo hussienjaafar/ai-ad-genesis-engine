@@ -74,14 +74,6 @@ class ExperimentController {
         return res.status(404).json({ error: 'Experiment not found' });
       }
       
-      // Verify ownership - user must have access to the business that owns this experiment
-      if (req.user?.role !== 'admin') {
-        const hasAccess = await experimentService.verifyExperimentAccess(id, req.user?.id);
-        if (!hasAccess) {
-          return res.status(403).json({ error: 'Access denied: You do not have permission to access this experiment' });
-        }
-      }
-      
       res.status(200).json(experiment);
     } catch (error: any) {
       console.error('Error fetching experiment:', error);
@@ -99,24 +91,6 @@ class ExperimentController {
       
       if (!['active', 'completed', 'paused'].includes(status)) {
         return res.status(400).json({ error: 'Invalid status' });
-      }
-      
-      // First check if the user has access to this experiment's business
-      if (req.user?.role !== 'admin') {
-        const hasAccess = await experimentService.verifyExperimentAccess(id, req.user?.id);
-        if (!hasAccess) {
-          return res.status(403).json({ error: 'Access denied: You do not have permission to update this experiment' });
-        }
-      }
-      
-      // Guard against modifying the split on active experiments
-      if (req.body.split) {
-        const experiment = await experimentService.getExperimentById(id);
-        if (experiment && experiment.status === 'active') {
-          return res.status(400).json({ 
-            error: 'Cannot modify the split ratio of an active experiment. Please pause or complete the experiment first.' 
-          });
-        }
       }
       
       const experiment = await experimentService.updateExperimentStatus(id, status);
@@ -137,15 +111,7 @@ class ExperimentController {
    */
   async getResults(req: Request, res: Response) {
     try {
-      const { expId, businessId } = req.params;
-      
-      // Make sure the user has access to this business
-      // (middleware verifyBusinessOwnership already checked this)
-      
-      // Compute the latest results first
-      await experimentService.computeResults(expId);
-      
-      // Then return them
+      const { expId } = req.params;
       const results = await experimentService.getResults(expId);
       
       if (!results) {

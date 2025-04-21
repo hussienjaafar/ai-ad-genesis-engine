@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -40,7 +41,7 @@ function App() {
         <Route path="/businesses/:id" element={<BusinessDetails />} />
         <Route path="/businesses/:id/billing" element={<Billing />} />
         <Route path="/businesses/:id/generate" element={<GenerateContent />} />
-        <Route path="/oauth/:platform/callback" element={<OAuthCallback />} />
+        <Route path="/oauth/callback" element={<OAuthCallback />} />
         <Route path="/content/:businessId" element={<Content />} />
         <Route path="/analytics" element={<AnalyticsDashboard />} />
         <Route path="/businesses/:id/experiments" element={<Experiments />} />

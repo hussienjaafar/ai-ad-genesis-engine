@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -7,6 +6,7 @@ import { AuthProvider } from './context/AuthContext';
 import Register from './pages/Register';
 import Login from './pages/Login';
 import Home from './pages/Home';
+import AuthCallback from './pages/AuthCallback';
 import Businesses from './pages/Businesses';
 import BusinessDetails from './pages/BusinessDetails';
 import OAuthCallback from './pages/OAuthCallback';
@@ -35,6 +35,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<Home />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/businesses" element={<Businesses />} />
         <Route path="/businesses/:id" element={<BusinessDetails />} />
         <Route path="/businesses/:id/billing" element={<Billing />} />
